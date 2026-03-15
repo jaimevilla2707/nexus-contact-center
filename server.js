@@ -207,9 +207,40 @@ app.delete('/admin/agents/:id', adminMiddleware, (req, res) => {
 // Estado en tiempo real de agentes
 app.get('/admin/status', adminMiddleware, (req, res) => {
   const online = [...onlineAgents.entries()].map(([id, a]) => ({
-    id, name: a.name, email: a.email, status: a.status, callSid: a.callSid, department: a.department
+    id, name: a.name, email: a.email, status: a.status,
+    callSid: a.callSid, department: a.department, role: a.role,
+    statusSince: a.statusSince || new Date().toISOString(),
+    callCount: a.callCount || 0,
   }));
   res.json({ online, queue: callQueue, activeCalls: [...activeCalls.values()] });
+});
+
+// Cambiar estado de agente remotamente (supervisor)
+app.post('/admin/agents/:id/force-status', adminMiddleware, (req, res) => {
+  const { status } = req.body;
+  const agent = onlineAgents.get(req.params.id);
+  if (!agent) return res.status(404).json({ error: 'Agente no conectado' });
+  agent.status = status;
+  agent.statusSince = new Date().toISOString();
+  // Notificar al agente que su estado fue cambiado
+  if (agent.ws && agent.ws.readyState === WebSocket.OPEN) {
+    agent.ws.send(JSON.stringify({ type: 'status_forced', status, by: req.agent.name }));
+  }
+  broadcastState();
+  console.log(`[SUPERVISOR] ${req.agent.name} cambió estado de ${req.params.id} a ${status}`);
+  res.json({ success: true });
+});
+
+// Terminar llamada de agente remotamente
+app.post('/admin/agents/:id/end-call', adminMiddleware, async (req, res) => {
+  const agent = onlineAgents.get(req.params.id);
+  if (!agent) return res.status(404).json({ error: 'Agente no conectado' });
+  if (agent.callSid) {
+    try {
+      await twilioClient.calls(agent.callSid).update({ status: 'completed' });
+    } catch(e) { console.error('[END CALL]', e.message); }
+  }
+  res.json({ success: true });
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -304,7 +335,7 @@ wss.on('connection', (ws, req) => {
         // Verificar token JWT
         try {
           const agent = jwt.verify(msg.token, JWT_SECRET);
-          agentData = { ws, status: 'available', callSid: null, name: agent.name, email: agent.email, role: agent.role, department: agent.department };
+          agentData = { ws, status: 'available', callSid: null, name: agent.name, email: agent.email, role: agent.role, department: agent.department, statusSince: new Date().toISOString(), callCount: 0 };
           onlineAgents.set(agent.id, agentData);
           console.log(`[WS] Conectado: ${agent.name}`);
           ws.send(JSON.stringify({ type: 'registered', agent }));
@@ -345,14 +376,24 @@ function assignCall(callSid, agentId) {
 }
 function updateAgentStatus(agentId, status) {
   const agent = onlineAgents.get(agentId);
-  if (agent) { agent.status = status; broadcastState(); }
+  if (agent) {
+    agent.status = status;
+    agent.statusSince = new Date().toISOString();
+    if (status === 'on-call') agent.callCount = (agent.callCount || 0) + 1;
+    broadcastState();
+  }
 }
 function endCall(agentId, callSid) {
   twilioClient.calls(callSid).update({ status: 'completed' }).catch(() => {});
   updateAgentStatus(agentId, 'available');
 }
 function getAgentList() {
-  return [...onlineAgents.entries()].map(([id, a]) => ({ id, name: a.name, email: a.email, status: a.status, callSid: a.callSid, department: a.department, role: a.role }));
+  return [...onlineAgents.entries()].map(([id, a]) => ({
+    id, name: a.name, email: a.email, status: a.status,
+    callSid: a.callSid, department: a.department, role: a.role,
+    statusSince: a.statusSince || new Date().toISOString(),
+    callCount: a.callCount || 0,
+  }));
 }
 function broadcastAll(data) {
   const msg = JSON.stringify(data);
