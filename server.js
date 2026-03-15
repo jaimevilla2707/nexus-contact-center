@@ -261,7 +261,13 @@ app.post('/voice/incoming', (req, res) => {
 
   if (available) {
     const [availId] = available;
-    twiml.dial().client(availId);
+    // Grabar ambos lados: record=record-from-answer graba desde que contesta
+    const dial = twiml.dial({
+      record: 'record-from-answer-dual',
+      recordingStatusCallback: '/voice/recording-dual-done',
+      recordingStatusCallbackMethod: 'POST',
+    });
+    dial.client(availId);
     assignCall(CallSid, availId);
   } else {
     const gather = twiml.gather({ numDigits: 1, action: '/voice/queue-option' });
@@ -292,11 +298,49 @@ app.post('/voice/outgoing', (req, res) => {
   const { To } = req.body;
   const twiml  = new VoiceResponse();
   if (To && To.startsWith('+')) {
-    twiml.dial({ callerId: TWILIO_PHONE_NUMBER }).number(To);
+    // Llamada a número real — grabar ambos lados
+    const dial = twiml.dial({
+      callerId: TWILIO_PHONE_NUMBER,
+      record: 'record-from-answer-dual',
+      recordingStatusCallback: '/voice/recording-dual-done',
+      recordingStatusCallbackMethod: 'POST',
+    });
+    dial.number(To);
   } else {
-    twiml.dial().client(To);
+    // Llamada browser-to-browser — grabar ambos lados
+    const dial = twiml.dial({
+      record: 'record-from-answer-dual',
+      recordingStatusCallback: '/voice/recording-dual-done',
+      recordingStatusCallbackMethod: 'POST',
+    });
+    dial.client(To);
   }
   res.type('text/xml').send(twiml.toString());
+});
+
+// Webhook: grabación dual completada (ambos lados)
+app.post('/voice/recording-dual-done', (req, res) => {
+  const { RecordingUrl, CallSid, RecordingDuration, RecordingSid } = req.body;
+  console.log(`[RECORDING] Dual - CallSid: ${CallSid}, Duración: ${RecordingDuration}s, URL: ${RecordingUrl}`);
+
+  // La URL de Twilio termina en .json — construir URL del audio directamente
+  const audioUrl = `${RecordingUrl}.mp3`;
+
+  // Obtener info de la llamada para enriquecer la grabación
+  const call = activeCalls.get(CallSid) || {};
+
+  broadcastAll({
+    type: 'recording_ready',
+    callSid: CallSid,
+    recordingSid: RecordingSid,
+    url: audioUrl,
+    duration: parseInt(RecordingDuration || 0),
+    from: call.from || 'Desconocido',
+    agentId: call.agentId || '',
+    timestamp: new Date().toISOString(),
+  });
+
+  res.sendStatus(200);
 });
 
 app.post('/voice/status', (req, res) => {
