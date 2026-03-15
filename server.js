@@ -36,8 +36,17 @@ const {
 
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
-// ── Cargar agentes ────────────────────────────────────────────────────────
+// ── Cargar agentes (desde variable de entorno o archivo) ──────────────────
 function loadAgents() {
+  // Primero intentar desde variable de entorno AGENTS_DATA (base64)
+  if (process.env.AGENTS_DATA) {
+    try {
+      return JSON.parse(Buffer.from(process.env.AGENTS_DATA, 'base64').toString('utf8'));
+    } catch(e) {
+      console.error('[AGENTS] Error leyendo AGENTS_DATA:', e.message);
+    }
+  }
+  // Fallback: leer desde archivo
   try {
     return JSON.parse(fs.readFileSync(path.join(__dirname, 'agents.json'), 'utf8'));
   } catch(e) {
@@ -46,7 +55,13 @@ function loadAgents() {
   }
 }
 function saveAgents(agents) {
-  fs.writeFileSync(path.join(__dirname, 'agents.json'), JSON.stringify(agents, null, 2));
+  // En Railway guardamos en archivo temporal (se pierde al reiniciar)
+  // Para persistencia real usar una base de datos
+  try {
+    fs.writeFileSync(path.join(__dirname, 'agents.json'), JSON.stringify(agents, null, 2));
+  } catch(e) {
+    console.error('[AGENTS] No se pudo guardar agents.json:', e.message);
+  }
 }
 
 // ── Estado en tiempo real ─────────────────────────────────────────────────
