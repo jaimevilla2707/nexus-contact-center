@@ -1,0 +1,182 @@
+[
+  {
+    "id": "admin",
+    "name": "Administrador",
+    "email": "admin@nexus.com",
+    "password": "Admin2024*",
+    "role": "admin",
+    "department": "Administración",
+    "active": true
+  },
+  {
+    "id": "viviana.garcia",
+    "name": "Viviana García",
+    "email": "Viviana1709@nexus.com",
+    "password": "Viviana1709",
+    "role": "agent",
+    "department": "Soporte Técnico",
+    "active": true
+  },
+  {
+    "id": "carlos.andrade",
+    "name": "Carlos Andrade",
+    "email": "carlos.andrade@nexus.com",
+    "password": "Carlos2024",
+    "role": "agent",
+    "department": "Ventas",
+    "active": true
+  },
+  {
+    "id": "lucia.rodriguez",
+    "name": "Lucía Rodríguez",
+    "email": "lucia.rodriguez@nexus.com",
+    "password": "Lucia2024",
+    "role": "agent",
+    "department": "Facturación",
+    "active": true
+  },
+  {
+    "id": "pedro.martinez",
+    "name": "Pedro Martínez",
+    "email": "pedro.martinez@nexus.com",
+    "password": "Pedro2024",
+    "role": "agent",
+    "department": "Soporte Técnico",
+    "active": true
+  },
+  {
+    "id": "ana.torres",
+    "name": "Ana Torres",
+    "email": "ana.torres@nexus.com",
+    "password": "Ana2024",
+    "role": "supervisor",
+    "department": "Supervisión",
+    "active": true
+  },
+  {
+    "id": "diego.fernandez",
+    "name": "Diego Fernández",
+    "email": "diego.fernandez@nexus.com",
+    "password": "Diego2024",
+    "role": "agent",
+    "department": "Retención",
+    "active": true
+  },
+  {
+    "id": "sandra.lopez",
+    "name": "Sandra López",
+    "email": "sandra.lopez@nexus.com",
+    "password": "Sandra2024",
+    "role": "agent",
+    "department": "Ventas",
+    "active": true
+  },
+  {
+    "id": "roberto.vargas",
+    "name": "Roberto Vargas",
+    "email": "roberto.vargas@nexus.com",
+    "password": "Roberto2024",
+    "role": "agent",
+    "department": "Soporte Técnico",
+    "active": true
+  },
+  {
+    "id": "paola.torres",
+    "name": "Paola Torres",
+    "email": "paola.torres@nexus.com",
+    "password": "Paola2024",
+    "role": "agent",
+    "department": "Facturación",
+    "active": true
+  },
+  {
+    "id": "camilo.mora",
+    "name": "Camilo Mora",
+    "email": "camilo.mora@nexus.com",
+    "password": "Camilo2024",
+    "role": "agent",
+    "department": "Soporte Técnico",
+    "active": true
+  },
+  {
+    "id": "natalia.gomez",
+    "name": "Natalia Gómez",
+    "email": "natalia.gomez@nexus.com",
+    "password": "Natalia2024",
+    "role": "agent",
+    "department": "Ventas",
+    "active": true
+  },
+  {
+    "id": "andres.ospina",
+    "name": "Andrés Ospina",
+    "email": "andres.ospina@nexus.com",
+    "password": "Andres2024",
+    "role": "agent",
+    "department": "Retención",
+    "active": true
+  },
+  {
+    "id": "valentina.cruz",
+    "name": "Valentina Cruz",
+    "email": "valentina.cruz@nexus.com",
+    "password": "Valentina2024",
+    "role": "agent",
+    "department": "Facturación",
+    "active": true
+  },
+  {
+    "id": "jorge.moreno",
+    "name": "Jorge Moreno",
+    "email": "jorge.moreno@nexus.com",
+    "password": "Jorge2024",
+    "role": "agent",
+    "department": "Soporte Técnico",
+    "active": true
+  },
+  {
+    "id": "laura.jimenez",
+    "name": "Laura Jiménez",
+    "email": "laura.jimenez@nexus.com",
+    "password": "Laura2024",
+    "role": "agent",
+    "department": "Ventas",
+    "active": true
+  },
+  {
+    "id": "sebastian.munoz",
+    "name": "Sebastián Muñoz",
+    "email": "sebastian.munoz@nexus.com",
+    "password": "Sebastian2024",
+    "role": "agent",
+    "department": "Soporte Técnico",
+    "active": true
+  },
+  {
+    "id": "maria.garcia",
+    "name": "María García",
+    "email": "maria.garcia@nexus.com",
+    "password": "Maria2024",
+    "role": "agent",
+    "department": "Retención",
+    "active": true
+  },
+  {
+    "id": "juan.carlos",
+    "name": "Juan Carlos",
+    "email": "juan.carlos@nexus.com",
+    "password": "Juan2024",
+    "role": "agent",
+    "department": "Facturación",
+    "active": true
+  },
+  {
+    "id": "carolina.perez",
+    "name": "Carolina Pérez",
+    "email": "carolina.perez@nexus.com",
+    "password": "Carolina2024",
+    "role": "agent",
+    "department": "Ventas",
+    "active": true
+  }
+]

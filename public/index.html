@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Contact Center</title>
+<script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.10.1/dist/twilio.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e17;--bg2:#111827;--bg3:#1a2235;--bg4:#1f2d42;
+  --b:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.13);
+  --t:#dde4f0;--t2:#7c8a9e;--t3:#4a5568;
+  --blu:#2563eb;--blu2:#60a5fa;--blu3:rgba(37,99,235,0.18);
+  --grn:#16a34a;--grn2:#4ade80;--grn3:rgba(22,163,74,0.15);
+  --red:#dc2626;--red2:#f87171;--red3:rgba(220,38,38,0.15);
+  --amb:#d97706;--amb2:#fbbf24;--amb3:rgba(217,119,6,0.15);
+  --pur:#7c3aed;--pur2:#a78bfa;--pur3:rgba(124,58,237,0.15);
+  --tel:#0891b2;--tel2:#22d3ee;--tel3:rgba(8,145,178,0.15);
+}
+body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;padding:16px}
+.login-card{background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:36px 32px;width:100%;max-width:380px}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.login-logo-box{width:44px;height:44px;background:var(--blu);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff}
+.login-logo-text{font-size:20px;font-weight:700;color:var(--t)}
+.login-logo-sub{font-size:11px;color:var(--t2);margin-top:1px}
+.login-title{font-size:15px;font-weight:600;color:var(--t);margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--t2);margin-bottom:24px;line-height:1.5}
+.login-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.login-label{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.04em}
+.login-input{background:var(--bg3);border:1px solid var(--b);border-radius:8px;padding:10px 12px;color:var(--t);font-size:13px;outline:none;font-family:inherit;width:100%;transition:border-color .15s}
+.login-input:focus{border-color:var(--blu)}
+.login-input::placeholder{color:var(--t3)}
+.login-btn{width:100%;height:44px;background:var(--blu);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:8px}
+.login-btn:hover{opacity:.9}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-error{font-size:12px;color:var(--red2);background:var(--red3);border:1px solid var(--red);border-radius:7px;padding:8px 12px;margin-top:10px;display:none}
+.login-error.show{display:block}
+.login-footer{text-align:center;margin-top:20px;font-size:11px;color:var(--t3)}
+
+/* ── HEADER ── */
+.hdr{height:48px;background:var(--bg2);border-bottom:1px solid var(--b);display:flex;align-items:center;gap:0;flex-shrink:0}
+.hdr-logo{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--b)}
+.logo{width:30px;height:30px;background:var(--blu);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+.hdr-nav{display:flex;height:100%;margin-left:4px}
+.hdr-tab{padding:0 14px;height:100%;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;white-space:nowrap}
+.hdr-tab:hover{color:var(--t)}
+.hdr-tab.act{color:var(--blu2);border-bottom-color:var(--blu2)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 12px}
+.pill{display:flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--b);border-radius:20px;padding:4px 10px;font-size:11px}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-g{background:var(--grn2)}.dot-a{background:var(--amb2)}.dot-r{background:var(--red2)}
+.pulse{animation:pu 1.4s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blu),var(--pur));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer;position:relative}
+.av-dot{position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;border:2px solid var(--bg2);background:var(--grn2)}
+.logout-btn{background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--t2);cursor:pointer;transition:all .12s}
+.logout-btn:hover{color:var(--red2);border-color:var(--red)}
+.status-menu{position:fixed;top:52px;right:130px;background:var(--bg2);border:1px solid var(--b2);border-radius:10px;padding:6px;z-index:500;min-width:200px;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.status-menu.show{display:block}
+.sm-section{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:6px 8px 3px}
+.sm-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background .1s;font-size:12px;color:var(--t)}
+.sm-item:hover{background:rgba(255,255,255,0.05)}
+.sm-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sm-sep{height:1px;background:var(--b);margin:4px 0}
+
+/* ── APP ── */
+.app{flex:1;display:flex;overflow:hidden;height:calc(100vh - 48px)}
+.qpanel{width:240px;background:var(--bg2);border-right:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0}
+.ph{padding:10px 12px;border-bottom:1px solid var(--b);font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ps{overflow-y:auto;flex:1}
+.ps::-webkit-scrollbar{width:3px}
+.ps::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px}
+.bg{background:rgba(22,163,74,.15);color:#4ade80}
+.br{background:rgba(220,38,46,.15);color:#f87171}
+.ba{background:rgba(217,119,6,.15);color:#fbbf24}
+.bb{background:rgba(37,99,235,.18);color:#60a5fa}
+.bgr{background:rgba(255,255,255,.07);color:var(--t2)}
+.bpur{background:rgba(124,58,237,.15);color:#a78bfa}
+.dp{padding:10px 8px;border-top:1px solid var(--b);flex-shrink:0}
+.dp-in{width:100%;background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:6px 10px;color:var(--t);font-size:14px;outline:none;font-family:inherit;text-align:center;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.dp-in:focus{border-color:var(--blu)}
+.dp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px}
+.dpk{height:32px;background:var(--bg3);border:1px solid var(--b);border-radius:6px;color:var(--t);font-size:13px;font-weight:500;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center}
+.dpk:hover{background:var(--bg4);border-color:var(--b2)}
+.dp-call{width:100%;height:36px;background:var(--grn3);color:var(--grn2);border:1px solid var(--grn);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:all .12s}
+.dp-call:hover{background:var(--grn);color:#fff}
+.dp-call:disabled{opacity:.4;cursor:not-allowed}
+.cpanel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.idle{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:.4}
+.idle-icon{font-size:52px}
+.idle-t{font-size:15px;font-weight:600;color:var(--t2)}
+.idle-s{font-size:12px;color:var(--t3)}
+.active-call{display:none;flex-direction:column;flex:1;overflow:hidden}
+.hero{background:var(--bg2);border-bottom:1px solid var(--b);padding:14px 16px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.hero-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--blu),var(--pur));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.hero-name{font-size:16px;font-weight:700;color:var(--t)}
+.hero-sub{font-size:11px;color:var(--t2);margin-top:2px}
+.hero-tags{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.hero-timer{font-size:28px;font-weight:300;color:var(--t);margin-left:auto;font-variant-numeric:tabular-nums}
+.hero-tlbl{font-size:9px;color:var(--t3);text-align:right;text-transform:uppercase;letter-spacing:.05em}
+.wavebar{background:var(--bg2);border-bottom:1px solid var(--b);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.wv{display:flex;align-items:center;gap:2px;height:28px;flex:1}
+.wb{width:3px;border-radius:2px;background:var(--blu2);flex-shrink:0;transition:height .07s}
+.ctrlbar{padding:8px 14px;border-bottom:1px solid var(--b);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.cb{height:32px;padding:0 12px;background:var(--bg3);border:1px solid var(--b);border-radius:6px;color:var(--t2);font-size:11px;font-weight:500;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:5px}
+.cb:hover{background:var(--bg4);color:var(--t);border-color:var(--b2)}
+.cb.on{background:var(--blu3);color:var(--blu2);border-color:var(--blu)}
+.cb.rec-on{background:var(--red3);color:var(--red2);border-color:var(--red)}
+.cb.danger{background:var(--red3);color:var(--red2);border-color:var(--red)}
+.cbody{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.cbody::-webkit-scrollbar{width:3px}
+.cbody::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.ic{background:var(--bg2);border:1px solid var(--b);border-radius:8px;padding:10px 12px}
+.ich{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.ir{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--b);font-size:11px}
+.ir:last-child{border-bottom:none}
+.irl{color:var(--t2)}.irv{color:var(--t);font-weight:500}
+.irv.g{color:var(--grn2)}.irv.a{color:var(--amb2)}.irv.b{color:var(--blu2)}.irv.r{color:var(--red2)}
+.nta{width:100%;background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:8px 10px;color:var(--t);font-size:11px;resize:none;outline:none;font-family:inherit;min-height:72px;line-height:1.5}
+.nta:focus{border-color:var(--blu)}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:10px;font-weight:600;padding:3px 9px;border-radius:4px;cursor:pointer;border:none;opacity:.55;transition:opacity .12s}
+.tag:hover,.tag.s{opacity:1}
+.rec-live-badge{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--red2);background:var(--red3);border:1px solid var(--red);padding:3px 8px;border-radius:4px}
+.rec-live-dot{width:6px;height:6px;border-radius:50%;background:var(--red2);animation:pu .7s infinite}
+
+/* ── PANEL GRABACIONES ── */
+.rec-panel{display:none;flex:1;flex-direction:column;overflow:hidden;background:var(--bg)}
+.rec-panel.act{display:flex}
+.rec-toolbar{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--bg2);flex-wrap:wrap}
+.rec-search{flex:1;min-width:160px;background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:6px 10px;color:var(--t);font-size:12px;outline:none;font-family:inherit}
+.rec-search:focus{border-color:var(--blu)}
+.rec-filter{background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:5px 10px;color:var(--t2);font-size:11px;cursor:pointer;transition:all .12s}
+.rec-filter.act{background:var(--blu3);color:var(--blu2);border-color:var(--blu)}
+.rec-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px;border-bottom:1px solid var(--b);flex-shrink:0;background:var(--bg2)}
+.rs-card{background:var(--bg3);border-radius:7px;padding:8px 12px;text-align:center}
+.rs-val{font-size:18px;font-weight:700;line-height:1}
+.rs-lbl{font-size:9px;color:var(--t2);margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.rec-list{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.rec-list::-webkit-scrollbar{width:4px}
+.rec-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.rec-card{background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:14px 16px;transition:border-color .12s}
+.rec-card:hover{border-color:var(--b2)}
+.rec-card.playing{border-color:var(--blu)}
+.rec-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rec-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.rec-caller{font-size:13px;font-weight:600;color:var(--t)}
+.rec-meta{font-size:11px;color:var(--t2);margin-top:2px}
+.rec-badges{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.rec-player{background:var(--bg3);border:1px solid var(--b);border-radius:8px;padding:10px 12px}
+.rec-controls{display:flex;align-items:center;gap:10px}
+.rec-play-btn{width:34px;height:34px;border-radius:50%;background:var(--blu);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .12s}
+.rec-play-btn:hover{opacity:.85}
+.rec-progress-wrap{flex:1;display:flex;flex-direction:column;gap:4px}
+.rec-progress{width:100%;height:4px;background:var(--bg4);border-radius:2px;cursor:pointer;appearance:none;outline:none}
+.rec-progress::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--blu2);cursor:pointer}
+.rec-times{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);font-variant-numeric:tabular-nums}
+.rec-waveform{height:36px;display:flex;align-items:center;gap:1px;margin-bottom:6px}
+.rec-wave-bar{border-radius:1px;background:var(--blu);opacity:.4;flex:1}
+.rec-wave-bar.played{background:var(--blu2);opacity:1}
+.rec-actions{display:flex;gap:6px;margin-top:10px}
+.rec-action-btn{padding:5px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--b);background:var(--bg3);color:var(--t2);transition:all .12s}
+.rec-action-btn:hover{color:var(--t);border-color:var(--b2)}
+.rec-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:.4}
+
+/* ── PANEL ADMIN (solo admin/supervisor) ── */
+.admin-panel{display:none;flex:1;flex-direction:column;overflow:hidden;background:var(--bg)}
+.admin-panel.act{display:flex}
+.admin-toolbar{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--bg2)}
+.admin-search{flex:1;background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:6px 10px;color:var(--t);font-size:12px;outline:none;font-family:inherit}
+.admin-search:focus{border-color:var(--blu)}
+.admin-body{flex:1;overflow-y:auto;padding:14px 16px}
+.admin-body::-webkit-scrollbar{width:4px}
+.admin-body::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.agent-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:8px;margin-bottom:6px;transition:border-color .12s}
+.agent-row:hover{border-color:var(--b2)}
+.agent-row-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.agent-row-info{flex:1}
+.agent-row-name{font-size:12px;font-weight:600;color:var(--t)}
+.agent-row-email{font-size:11px;color:var(--t2)}
+.agent-row-actions{display:flex;gap:5px}
+.btn-sm{padding:4px 9px;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--b);background:var(--bg3);color:var(--t2);transition:all .12s}
+.btn-sm:hover{color:var(--t)}
+.btn-sm.danger:hover{color:var(--red2);border-color:var(--red)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:14px;padding:24px;width:100%;max-width:400px}
+.modal-title{font-size:15px;font-weight:700;color:var(--t);margin-bottom:16px}
+.mf{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.mf label{font-size:11px;color:var(--t2)}
+.mi{background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:7px 10px;color:var(--t);font-size:12px;outline:none;font-family:inherit;width:100%}
+.mi:focus{border-color:var(--blu)}
+.mi-sel{background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:7px 10px;color:var(--t);font-size:12px;outline:none;font-family:inherit;width:100%}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.btn-primary{flex:1;height:38px;background:var(--blu);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-primary:hover{opacity:.9}
+.btn-secondary{flex:1;height:38px;background:var(--bg3);color:var(--t2);border:1px solid var(--b);border-radius:7px;font-size:12px;cursor:pointer}
+
+/* ── INCOMING ── */
+.inc{display:none;position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--grn);border-radius:14px;padding:16px 18px;z-index:300;min-width:250px;animation:su .2s ease;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+@keyframes su{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.inc.show{display:block}
+.inc-ring{font-size:11px;font-weight:700;color:var(--grn2);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rdot{width:7px;height:7px;border-radius:50%;background:var(--grn2);animation:pu .7s infinite}
+.inc-name{font-size:15px;font-weight:700;color:var(--t)}
+.inc-num{font-size:11px;color:var(--t2);margin:3px 0 12px}
+.inc-btns{display:flex;gap:8px}
+.iacc{flex:1;height:36px;background:var(--grn3);color:var(--grn2);border:1px solid var(--grn);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700}
+.irej{flex:1;height:36px;background:var(--red3);color:var(--red2);border:1px solid var(--red);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700}
+.toast{display:none;position:fixed;top:60px;right:16px;background:var(--bg2);border:1px solid var(--b2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--t);z-index:500;align-items:center;gap:8px;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.toast.show{display:flex;animation:su .2s ease}
+.tdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════════════════════ -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-box">NX</div>
+      <div>
+        <div class="login-logo-text">Nexus</div>
+        <div class="login-logo-sub">Contact Center</div>
+      </div>
+    </div>
+    <div class="login-title">Iniciar sesión</div>
+    <div class="login-sub">Ingresa tus credenciales para comenzar a atender llamadas.</div>
+    <div class="login-field">
+      <label class="login-label">Correo electrónico</label>
+      <input class="login-input" id="l-email" type="email" placeholder="tu.nombre@nexus.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Contraseña</label>
+      <input class="login-input" id="l-pass" type="password" placeholder="••••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="l-btn" onclick="doLogin()">Ingresar al sistema</button>
+    <div class="login-error" id="l-error"></div>
+    <div class="login-footer">Nexus Contact Center v2.0 · Soporte: admin@nexus.com</div>
+  </div>
+</div>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+<div class="hdr">
+  <div class="hdr-logo"><div class="logo">NX</div></div>
+  <div class="hdr-nav">
+    <div class="hdr-tab act" id="tab-calls" onclick="switchTab('calls')">📞 Llamadas</div>
+    <div class="hdr-tab" id="tab-recs" onclick="switchTab('recs')">⏺ Grabaciones <span class="badge br" id="rec-count-badge" style="display:none">0</span></div>
+    <div class="hdr-tab" id="tab-admin" style="display:none" onclick="switchTab('admin')">⚙ Agentes</div>
+  </div>
+  <div class="hdr-right">
+    <div class="pill"><div class="dot dot-g pulse"></div><span style="color:var(--grn2);font-weight:700" id="h-online">0</span><span style="color:var(--t3)"> en línea</span></div>
+    <div class="pill" id="status-pill" onclick="toggleStatusMenu()" style="cursor:pointer">
+      <div class="dot dot-g" id="my-dot"></div>
+      <span id="my-status">Disponible</span>
+      <span style="font-size:9px;color:var(--t3);margin-left:2px">▼</span>
+    </div>
+    <div class="av" id="my-av">??<div class="av-dot" id="av-dot"></div></div>
+    <button class="logout-btn" onclick="doLogout()">Salir</button>
+  </div>
+</div>
+
+<!-- STATUS MENU -->
+<div class="status-menu" id="status-menu">
+  <div class="sm-section">Productivo</div>
+  <div class="sm-item" onclick="setStatus('Disponible','#4ade80')"><div class="sm-dot" style="background:#4ade80"></div>Disponible</div>
+  <div class="sm-item" onclick="setStatus('Post-llamada','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Post-llamada (ACW)</div>
+  <div class="sm-item" onclick="setStatus('Capacitación','#4ade80')"><div class="sm-dot" style="background:#4ade80"></div>Capacitación</div>
+  <div class="sm-sep"></div>
+  <div class="sm-section">Pausas</div>
+  <div class="sm-item" onclick="setStatus('Break','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Break</div>
+  <div class="sm-item" onclick="setStatus('Almuerzo','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Almuerzo</div>
+  <div class="sm-item" onclick="setStatus('Baño','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Baño</div>
+  <div class="sm-item" onclick="setStatus('Reunión','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Reunión</div>
+  <div class="sm-item" onclick="setStatus('Retroalimentación','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Retroalimentación</div>
+  <div class="sm-sep"></div>
+  <div class="sm-section">No disponible</div>
+  <div class="sm-item" onclick="setStatus('Ocupado','#f87171')"><div class="sm-dot" style="background:#f87171"></div>Ocupado</div>
+  <div class="sm-item" onclick="setStatus('No molestar','#f87171')"><div class="sm-dot" style="background:#f87171"></div>No molestar</div>
+  <div class="sm-item" onclick="setStatus('Ausente','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Ausente</div>
+  <div class="sm-item" onclick="setStatus('Soporte técnico','#f87171')"><div class="sm-dot" style="background:#f87171"></div>Soporte técnico</div>
+  <div class="sm-item" onclick="setStatus('Supervisión','#fbbf24')"><div class="sm-dot" style="background:#fbbf24"></div>Supervisión</div>
+  <div class="sm-item" onclick="setStatus('Fuera de línea','#6b7280')"><div class="sm-dot" style="background:#6b7280"></div>Fuera de línea</div>
+</div>
+
+<!-- ══ APP ══════════════════════════════════════════════════════════════════ -->
+<div class="app" id="main-app">
+  <div class="qpanel">
+    <div class="ph">Cola <span class="badge ba" id="q-badge">0</span></div>
+    <div class="ps" id="queue-list">
+      <div style="padding:20px;text-align:center;color:var(--t3);font-size:11px">Sin llamadas en cola</div>
+    </div>
+    <div class="dp">
+      <input class="dp-in" id="dial-in" placeholder="+57 300 000 0000">
+      <div class="dp-grid">
+        <button class="dpk" onclick="dk('1')">1</button><button class="dpk" onclick="dk('2')">2</button><button class="dpk" onclick="dk('3')">3</button>
+        <button class="dpk" onclick="dk('4')">4</button><button class="dpk" onclick="dk('5')">5</button><button class="dpk" onclick="dk('6')">6</button>
+        <button class="dpk" onclick="dk('7')">7</button><button class="dpk" onclick="dk('8')">8</button><button class="dpk" onclick="dk('9')">9</button>
+        <button class="dpk" onclick="dk('*')">✱</button><button class="dpk" onclick="dk('0')">0</button><button class="dpk" onclick="dk('#')">#</button>
+      </div>
+      <button class="dp-call" id="dial-btn" onclick="makeCall()" disabled>📞 Llamar</button>
+    </div>
+  </div>
+  <div class="cpanel">
+    <div class="idle" id="idle">
+      <div class="idle-icon">🎧</div>
+      <div class="idle-t">Listo para recibir llamadas</div>
+      <div class="idle-s">Conectado como <span id="idle-agent">–</span></div>
+    </div>
+    <div class="active-call" id="active-call">
+      <div class="hero">
+        <div class="hero-av" id="c-av">?</div>
+        <div>
+          <div class="hero-name" id="c-name">–</div>
+          <div class="hero-sub" id="c-sub">–</div>
+          <div class="hero-tags">
+            <span class="badge" id="c-dir">Entrante</span>
+            <span class="badge ba" id="c-st">Conectando...</span>
+          </div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="hero-timer" id="c-timer">00:00</div>
+          <div class="hero-tlbl">duración</div>
+        </div>
+      </div>
+      <div class="wavebar">
+        <div class="dot dot-g pulse"></div>
+        <span style="font-size:11px;font-weight:600;color:var(--grn2)">En vivo · WebRTC</span>
+        <div class="wv" id="waveform"></div>
+        <div class="rec-live-badge" id="rec-indicator" style="display:none"><div class="rec-live-dot"></div>REC</div>
+        <span style="font-size:10px;color:var(--grn2);font-weight:600">Excelente</span>
+      </div>
+      <div class="ctrlbar">
+        <button class="cb" id="cb-mute" onclick="toggleMute()">🎤 Mute</button>
+        <button class="cb" id="cb-hold" onclick="toggleHold()">⏸ Hold</button>
+        <button class="cb rec-on" id="cb-rec" onclick="toggleRec()">⏺ Grabando</button>
+        <button class="cb danger" onclick="hangUp()">📵 Colgar</button>
+      </div>
+      <div class="cbody">
+        <div class="ic">
+          <div class="ich">Información de la llamada</div>
+          <div class="ir"><span class="irl">Número</span><span class="irv b" id="i-from">–</span></div>
+          <div class="ir"><span class="irl">Dirección</span><span class="irv" id="i-dir">–</span></div>
+          <div class="ir"><span class="irl">Agente</span><span class="irv" id="i-agent">–</span></div>
+          <div class="ir"><span class="irl">Estado</span><span class="irv g" id="i-status">–</span></div>
+        </div>
+        <div class="ic">
+          <div class="ich">Notas de la llamada</div>
+          <textarea class="nta" id="notes" placeholder="Escribe notas durante la llamada..."></textarea>
+          <div class="tags">
+            <button class="tag bg" onclick="st(this)">Resuelto</button>
+            <button class="tag ba" onclick="st(this)">Seguimiento</button>
+            <button class="tag br" onclick="st(this)">Escalación</button>
+            <button class="tag bb" onclick="st(this)">Info brindada</button>
+            <button class="tag bpur" onclick="st(this)">Ticket creado</button>
+            <button class="tag bgr" onclick="st(this)">Sin solución</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GRABACIONES ══════════════════════════════════════════════════════════ -->
+<div class="rec-panel" id="rec-panel">
+  <div class="rec-stats">
+    <div class="rs-card"><div class="rs-val" style="color:var(--blu2)" id="rs-total">0</div><div class="rs-lbl">Total</div></div>
+    <div class="rs-card"><div class="rs-val" style="color:var(--grn2)" id="rs-hoy">0</div><div class="rs-lbl">Hoy</div></div>
+    <div class="rs-card"><div class="rs-val" style="color:var(--amb2)" id="rs-dur">0:00</div><div class="rs-lbl">Duración prom.</div></div>
+    <div class="rs-card"><div class="rs-val" style="color:var(--pur2)" id="rs-size">0 MB</div><div class="rs-lbl">Almacenamiento</div></div>
+  </div>
+  <div class="rec-toolbar">
+    <input class="rec-search" id="rec-search" placeholder="Buscar por número, agente o disposición..." oninput="filterRecs()">
+    <button class="rec-filter act" onclick="filterByType('all',this)">Todas</button>
+    <button class="rec-filter" onclick="filterByType('Entrante',this)">Entrantes</button>
+    <button class="rec-filter" onclick="filterByType('Saliente',this)">Salientes</button>
+    <button class="rec-filter" onclick="filterByType('hoy',this)">Hoy</button>
+  </div>
+  <div class="rec-list" id="rec-list">
+    <div class="rec-empty" id="rec-empty">
+      <div style="font-size:40px">🎙</div>
+      <div style="font-size:14px;font-weight:600;color:var(--t2)">Sin grabaciones aún</div>
+      <div style="font-size:12px;color:var(--t3)">Las llamadas se graban automáticamente</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN AGENTES ════════════════════════════════════════════════════════ -->
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-toolbar">
+    <input class="admin-search" id="admin-search" placeholder="Buscar agente..." oninput="filterAgents()">
+    <button class="btn-primary" style="width:auto;padding:0 16px;height:34px;font-size:11px" onclick="openNewAgentModal()">+ Nuevo agente</button>
+  </div>
+  <div class="admin-body" id="admin-body">
+    <div style="text-align:center;padding:40px;color:var(--t3)">Cargando agentes...</div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR AGENTE -->
+<div class="modal-overlay" id="agent-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Nuevo agente</div>
+    <div class="mf"><label>Nombre completo</label><input class="mi" id="m-name" placeholder="Nombre Apellido"></div>
+    <div class="mf"><label>Correo electrónico</label><input class="mi" id="m-email" type="email" placeholder="nombre@nexus.com"></div>
+    <div class="mf"><label>Contraseña</label><input class="mi" id="m-pass" type="password" placeholder="Mínimo 6 caracteres"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mf"><label>Rol</label>
+        <select class="mi-sel" id="m-role">
+          <option value="agent">Agente</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div class="mf"><label>Departamento</label>
+        <select class="mi-sel" id="m-dept">
+          <option>Soporte Técnico</option>
+          <option>Ventas</option>
+          <option>Facturación</option>
+          <option>Retención</option>
+          <option>Supervisión</option>
+          <option>Administración</option>
+          <option>General</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveAgent()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCOMING + TOAST -->
+<div class="inc" id="inc-popup">
+  <div class="inc-ring"><div class="rdot"></div>Llamada entrante</div>
+  <div class="inc-name" id="inc-name">Desconocido</div>
+  <div class="inc-num" id="inc-from">–</div>
+  <div class="inc-btns">
+    <button class="iacc" onclick="acceptCall()">✓ Contestar</button>
+    <button class="irej" onclick="rejectCall()">✗ Rechazar</button>
+  </div>
+</div>
+<div class="toast" id="toast"><div class="tdot" id="tdot"></div><span id="tmsg">–</span></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────
+const API = window.location.origin;
+let jwtToken='', currentAgent=null, device=null, activeCall=null, incomingCall=null;
+let timerInt=null, timerSec=0, isMuted=false, ws=null;
+let recordings=[], recFilterType='all', allAgents=[], editingAgentId=null;
+let currentPlaying=null, mediaRecorder=null, recChunks=[], recStream=null;
+
+// ── Login ─────────────────────────────────────────────────────────────────
+document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('l-email').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('l-pass').focus(); });
+
+async function doLogin(){
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('l-error');
+  const btn   = document.getElementById('l-btn');
+  if(!email||!pass){ showErr('Completa todos los campos'); return; }
+  btn.disabled=true; btn.textContent='Ingresando...'; errEl.classList.remove('show');
+  try{
+    const res  = await fetch(`${API}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password:pass}) });
+    const data = await res.json();
+    if(!res.ok){ showErr(data.error||'Error de autenticación'); btn.disabled=false; btn.textContent='Ingresar al sistema'; return; }
+    jwtToken     = data.token;
+    currentAgent = data.agent;
+    localStorage.setItem('nexus_token', jwtToken);
+    await initApp();
+  } catch(e){
+    showErr('No se pudo conectar al servidor. Verifica tu conexión.');
+    btn.disabled=false; btn.textContent='Ingresar al sistema';
+  }
+}
+function showErr(msg){ const e=document.getElementById('l-error'); e.textContent=msg; e.classList.add('show'); }
+
+async function checkSavedSession(){
+  const saved = localStorage.getItem('nexus_token');
+  if(!saved) return;
+  try{
+    const res  = await fetch(`${API}/auth/me`, { headers:{'Authorization':'Bearer '+saved} });
+    if(!res.ok){ localStorage.removeItem('nexus_token'); return; }
+    const data = await res.json();
+    jwtToken=saved; currentAgent=data.agent;
+    await initApp();
+  } catch(e){ localStorage.removeItem('nexus_token'); }
+}
+
+async function initApp(){
+  document.getElementById('login-screen').style.display='none';
+  // Iniciales y nombre
+  const init = currentAgent.name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('my-av').childNodes[0].textContent=init;
+  document.getElementById('idle-agent').textContent=currentAgent.name;
+  document.getElementById('i-agent').textContent=currentAgent.name;
+  // Mostrar tab admin si corresponde
+  if(currentAgent.role==='admin'||currentAgent.role==='supervisor'){
+    document.getElementById('tab-admin').style.display='flex';
+  }
+  // Iniciar SDK Twilio
+  await initTwilio();
+  // Iniciar WebSocket
+  connectWS();
+  toast(`Bienvenido, ${currentAgent.name}`, 'var(--grn2)');
+}
+
+function doLogout(){
+  localStorage.removeItem('nexus_token');
+  if(device){ try{device.destroy();}catch(e){} }
+  if(ws){ try{ws.close();}catch(e){} }
+  location.reload();
+}
+
+// ── Twilio SDK ────────────────────────────────────────────────────────────
+async function initTwilio(){
+  try{
+    const res  = await fetch(`${API}/token`, { headers:{'Authorization':'Bearer '+jwtToken} });
+    const data = await res.json();
+    if(!data.token){ toast('Error obteniendo token de voz','var(--red2)'); return; }
+    device = new Twilio.Device(data.token, { logLevel:1, codecPreferences:['opus','pcmu'], enableImprovedSignalingErrorPrecision:true });
+    await new Promise((resolve,reject)=>{
+      const t=setTimeout(()=>reject(new Error('Timeout')),15000);
+      device.on('registered',()=>{ clearTimeout(t); resolve(); });
+      device.on('error',(e)=>{ clearTimeout(t); reject(e); });
+      device.register();
+    });
+    document.getElementById('dial-btn').disabled=false;
+    device.on('incoming',(call)=>{
+      incomingCall=call;
+      const from=call.parameters.From||'Desconocido';
+      document.getElementById('inc-name').textContent=from.startsWith('client:')?from.replace('client:','Agente: '):from;
+      document.getElementById('inc-from').textContent='Llamada entrante · '+new Date().toLocaleTimeString('es-CO');
+      document.getElementById('inc-popup').classList.add('show');
+      call.on('cancel',()=>{ document.getElementById('inc-popup').classList.remove('show'); incomingCall=null; });
+    });
+    device.on('tokenWillExpire',async()=>{
+      const r=await fetch(`${API}/token`,{headers:{'Authorization':'Bearer '+jwtToken}});
+      const d=await r.json(); if(d.token) device.updateToken(d.token);
+    });
+    toast('Sistema de voz listo','var(--grn2)');
+  } catch(e){ toast('Error iniciando voz: '+e.message,'var(--red2)'); }
+}
+
+// ── WebSocket ─────────────────────────────────────────────────────────────
+function connectWS(){
+  const wsUrl=(API.startsWith('https')?'wss':'ws')+'://'+location.host;
+  ws=new WebSocket(wsUrl);
+  ws.onopen=()=>{ ws.send(JSON.stringify({type:'register',token:jwtToken})); };
+  ws.onmessage=(ev)=>{
+    try{ const msg=JSON.parse(ev.data); handleWS(msg); }catch(e){}
+  };
+  ws.onclose=()=>{ setTimeout(connectWS,3000); };
+}
+function handleWS(msg){
+  if(msg.type==='state_update'){
+    document.getElementById('h-online').textContent=msg.agents?.length||0;
+    renderQueue(msg.queue||[]);
+  } else if(msg.type==='incoming_call'){
+    toast('Llamada entrante: '+msg.call.from,'var(--grn2)');
+  }
+}
+function renderQueue(queue){
+  const el=document.getElementById('queue-list');
+  const badge=document.getElementById('q-badge');
+  badge.textContent=queue.length;
+  if(!queue.length){ el.innerHTML='<div style="padding:20px;text-align:center;color:var(--t3);font-size:11px">Sin llamadas en cola</div>'; return; }
+  const colors=['#2563eb','#7c3aed','#0891b2','#d97706','#db2777'];
+  el.innerHTML=queue.map((c,i)=>`
+    <div style="padding:8px 10px;margin:3px 6px;background:var(--bg3);border:1px solid var(--b);border-radius:7px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+        <div style="width:26px;height:26px;border-radius:50%;background:${colors[i%colors.length]};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${(c.from||'?').slice(-2)}</div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t)">${c.from||'Desconocido'}</div><div style="font-size:10px;color:var(--t3)">${c.status}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="badge ba">En espera</span>
+        <span style="font-size:10px;color:var(--t3)">${timeSince(c.startTime)}</span>
+      </div>
+    </div>`).join('');
+}
+function timeSince(iso){ if(!iso) return '–'; const s=Math.floor((Date.now()-new Date(iso).getTime())/1000); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+
+// ── Llamadas ──────────────────────────────────────────────────────────────
+function acceptCall(){
+  if(!incomingCall) return;
+  document.getElementById('inc-popup').classList.remove('show');
+  activeCall=incomingCall; incomingCall=null;
+  attachHandlers(activeCall,'Entrante',activeCall.parameters.From||'–');
+  activeCall.accept();
+}
+function rejectCall(){
+  if(incomingCall){ incomingCall.reject(); incomingCall=null; }
+  document.getElementById('inc-popup').classList.remove('show');
+}
+async function makeCall(){
+  if(!device||activeCall) return;
+  const to=document.getElementById('dial-in').value.trim();
+  if(!to){ toast('Ingresa un número o nombre de agente','var(--amb2)'); return; }
+  try{ activeCall=await device.connect({params:{To:to}}); attachHandlers(activeCall,'Saliente',to); }
+  catch(e){ toast('Error: '+e.message,'var(--red2)'); }
+}
+function attachHandlers(call,dir,target){
+  showCallUI(target,dir);
+  document.getElementById('i-from').textContent=target;
+  document.getElementById('i-dir').textContent=dir;
+  document.getElementById('c-dir').textContent=dir;
+  document.getElementById('c-dir').className='badge '+(dir==='Entrante'?'bg':'bb');
+  call.on('accept',()=>{
+    document.getElementById('c-st').textContent='Conectada'; document.getElementById('c-st').className='badge bg';
+    document.getElementById('i-status').textContent='Conectada';
+    startTimer(); wvActive=true; animWave(); startRecording();
+    toast('Llamada conectada · Grabando automáticamente','var(--grn2)');
+  });
+  call.on('disconnect',()=>endCallUI('Completada'));
+  call.on('cancel',()=>endCallUI('Cancelada'));
+  call.on('reject',()=>endCallUI('Rechazada'));
+  call.on('error',(e)=>{ toast('Error: '+e.message,'var(--red2)'); endCallUI('Error'); });
+}
+function showCallUI(target,dir){
+  document.getElementById('idle').style.display='none';
+  document.getElementById('active-call').style.display='flex';
+  document.getElementById('c-av').textContent=target.replace(/\D/g,'').slice(-2)||target.slice(0,2).toUpperCase();
+  document.getElementById('c-name').textContent=target;
+  document.getElementById('c-sub').textContent=dir+' · '+new Date().toLocaleTimeString('es-CO');
+  document.getElementById('c-st').textContent='Conectando...'; document.getElementById('c-st').className='badge ba';
+  document.getElementById('i-status').textContent='Conectando...';
+}
+function endCallUI(reason){
+  stopTimer(); wvActive=false; stopRecording();
+  document.getElementById('c-st').textContent=reason; document.getElementById('c-st').className='badge br';
+  document.getElementById('i-status').textContent=reason;
+  toast('Llamada '+reason.toLowerCase(),'var(--amb2)');
+  setTimeout(()=>{
+    document.getElementById('idle').style.display='flex';
+    document.getElementById('active-call').style.display='none';
+    document.getElementById('c-timer').textContent='00:00';
+    document.getElementById('notes').value='';
+    document.querySelectorAll('.tag').forEach(t=>t.classList.remove('s'));
+    isMuted=false; document.getElementById('cb-mute').classList.remove('on');
+    activeCall=null;
+  },2000);
+}
+
+// ── Grabación ─────────────────────────────────────────────────────────────
+function startRecording(){
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    recStream=stream; recChunks=[];
+    mediaRecorder=new MediaRecorder(stream,{mimeType:'audio/webm;codecs=opus'});
+    mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recChunks.push(e.data); };
+    mediaRecorder.onstop=saveRecording;
+    mediaRecorder.start(1000);
+    document.getElementById('rec-indicator').style.display='flex';
+  }).catch(e=>console.warn('Grabación no disponible:',e.message));
+}
+function stopRecording(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  if(recStream){ recStream.getTracks().forEach(t=>t.stop()); recStream=null; }
+  document.getElementById('rec-indicator').style.display='none';
+}
+function saveRecording(){
+  if(!recChunks.length) return;
+  const blob=new Blob(recChunks,{type:'audio/webm'});
+  const url=URL.createObjectURL(blob);
+  const now=new Date();
+  const rec={
+    id:Date.now(), from:document.getElementById('i-from').textContent,
+    dir:document.getElementById('i-dir').textContent,
+    tag:document.querySelector('.tag.s')?.textContent||'Sin disposición',
+    dur:timerSec, notes:document.getElementById('notes').value,
+    url, blob, date:now,
+    dateStr:now.toLocaleDateString('es-CO'), timeStr:now.toLocaleTimeString('es-CO'),
+    agent:currentAgent?.name||'Agente', size:blob.size,
+    colors:['#2563eb','#7c3aed','#0891b2','#16a34a','#d97706','#db2777'],
+  };
+  recordings.unshift(rec);
+  updateRecStats();
+  const badge=document.getElementById('rec-count-badge');
+  badge.style.display='inline'; badge.textContent=recordings.length;
+  toast('Grabación guardada · '+fmtDur(rec.dur),'var(--blu2)');
+}
+function toggleRec(){
+  if(mediaRecorder&&mediaRecorder.state==='recording'){ stopRecording(); document.getElementById('cb-rec').textContent='⏺ Grabar'; document.getElementById('cb-rec').className='cb'; }
+  else { startRecording(); document.getElementById('cb-rec').textContent='⏺ Grabando'; document.getElementById('cb-rec').className='cb rec-on'; }
+}
+function fmtDur(s){ const m=Math.floor(s/60),sec=s%60; return m+':'+(sec<10?'0':'')+sec; }
+function fmtSize(b){ if(b<1048576) return (b/1024).toFixed(0)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function updateRecStats(){
+  const today=new Date().toLocaleDateString('es-CO');
+  document.getElementById('rs-total').textContent=recordings.length;
+  document.getElementById('rs-hoy').textContent=recordings.filter(r=>r.dateStr===today).length;
+  const avg=recordings.length?Math.round(recordings.reduce((a,r)=>a+r.dur,0)/recordings.length):0;
+  document.getElementById('rs-dur').textContent=fmtDur(avg);
+  document.getElementById('rs-size').textContent=fmtSize(recordings.reduce((a,r)=>a+(r.size||0),0));
+}
+function renderRecordings(){
+  const search=document.getElementById('rec-search').value.toLowerCase();
+  const today=new Date().toLocaleDateString('es-CO');
+  const list=recordings.filter(r=>{
+    const ms=!search||[r.from,r.agent,r.tag,r.notes].some(x=>x?.toLowerCase().includes(search));
+    const mt=recFilterType==='all'||recFilterType===r.dir||(recFilterType==='hoy'&&r.dateStr===today);
+    return ms&&mt;
+  });
+  const el=document.getElementById('rec-list');
+  const empty=document.getElementById('rec-empty');
+  if(!list.length){ empty.style.display='flex'; el.innerHTML=''; el.appendChild(empty); return; }
+  empty.style.display='none';
+  el.innerHTML=list.map((r,i)=>{
+    const av=r.from.replace(/\D/g,'').slice(-2)||r.from.slice(0,2).toUpperCase();
+    const bg=r.colors[i%r.colors.length];
+    const tc=r.tag==='Resuelto'?'bg':r.tag==='Escalación'?'br':r.tag==='Seguimiento'?'ba':'bb';
+    const bars=Array.from({length:60},(_,j)=>{const h=Math.max(4,Math.abs(Math.sin(r.id*j*0.3+j*0.7)*28)+4); return `<div class="rec-wave-bar" style="height:${h}px"></div>`;}).join('');
+    return `<div class="rec-card" id="rcard-${r.id}">
+      <div class="rec-top">
+        <div class="rec-av" style="background:${bg}">${av}</div>
+        <div><div class="rec-caller">${r.from}</div><div class="rec-meta">${r.dateStr} ${r.timeStr} · ${r.agent} · ${fmtSize(r.size||0)}</div></div>
+        <div class="rec-badges">
+          <span class="badge ${r.dir==='Entrante'?'bg':'bb'}">${r.dir}</span>
+          <span class="badge ${tc}">${r.tag}</span>
+          <span class="badge bgr">${fmtDur(r.dur)}</span>
+        </div>
+      </div>
+      <div class="rec-player">
+        <div class="rec-waveform" id="rwv-${r.id}">${bars}</div>
+        <div class="rec-controls">
+          <button class="rec-play-btn" id="pbtn-${r.id}" onclick="togglePlay(${r.id})">▶</button>
+          <div class="rec-progress-wrap">
+            <input type="range" class="rec-progress" id="rprog-${r.id}" min="0" max="100" value="0" oninput="seekRec(${r.id},this.value)">
+            <div class="rec-times"><span id="rcur-${r.id}">0:00</span><span>${fmtDur(r.dur)}</span></div>
+          </div>
+        </div>
+      </div>
+      ${r.notes?`<div style="font-size:11px;color:var(--t2);margin-top:8px;padding:7px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--b)">📝 ${r.notes}</div>`:''}
+      <div class="rec-actions">
+        <button class="rec-action-btn" onclick="downloadRec(${r.id})">⬇ Descargar</button>
+        <button class="rec-action-btn" onclick="deleteRec(${r.id})">🗑 Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+  list.forEach(r=>{ if(!r.audio){ r.audio=new Audio(r.url); r.audio.ontimeupdate=()=>updateProgress(r); r.audio.onended=()=>{ const b=document.getElementById('pbtn-'+r.id); if(b)b.textContent='▶'; document.getElementById('rcard-'+r.id)?.classList.remove('playing'); }; } });
+}
+function togglePlay(id){
+  const rec=recordings.find(r=>r.id===id);
+  if(!rec) return;
+  if(currentPlaying&&currentPlaying!==rec){ currentPlaying.audio.pause(); currentPlaying.audio.currentTime=0; const b=document.getElementById('pbtn-'+currentPlaying.id); if(b)b.textContent='▶'; document.getElementById('rcard-'+currentPlaying.id)?.classList.remove('playing'); }
+  if(rec.audio.paused){ rec.audio.play(); document.getElementById('pbtn-'+id).textContent='⏸'; document.getElementById('rcard-'+id)?.classList.add('playing'); currentPlaying=rec; }
+  else { rec.audio.pause(); document.getElementById('pbtn-'+id).textContent='▶'; document.getElementById('rcard-'+id)?.classList.remove('playing'); currentPlaying=null; }
+}
+function updateProgress(rec){ const pct=rec.audio.duration?(rec.audio.currentTime/rec.audio.duration)*100:0; const p=document.getElementById('rprog-'+rec.id),c=document.getElementById('rcur-'+rec.id); if(p)p.value=pct; if(c)c.textContent=fmtDur(Math.floor(rec.audio.currentTime)); const bars=document.querySelectorAll('#rwv-'+rec.id+' .rec-wave-bar'); const n=Math.floor(pct/100*bars.length); bars.forEach((b,i)=>b.classList.toggle('played',i<n)); }
+function seekRec(id,val){ const rec=recordings.find(r=>r.id===id); if(rec&&rec.audio.duration)rec.audio.currentTime=(val/100)*rec.audio.duration; }
+function downloadRec(id){ const rec=recordings.find(r=>r.id===id); if(!rec)return; const a=document.createElement('a'); a.href=rec.url; a.download=`nexus_${rec.from}_${rec.dateStr.replace(/\//g,'-')}.webm`; a.click(); }
+function deleteRec(id){ recordings=recordings.filter(r=>r.id!==id); renderRecordings(); updateRecStats(); }
+function filterRecs(){ renderRecordings(); }
+function filterByType(type,btn){ recFilterType=type; document.querySelectorAll('.rec-filter').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); renderRecordings(); }
+
+// ── Admin agentes ─────────────────────────────────────────────────────────
+async function loadAdminAgents(){
+  try{
+    const res=await fetch(`${API}/admin/agents`,{headers:{'Authorization':'Bearer '+jwtToken}});
+    allAgents=await res.json();
+    renderAgents(allAgents);
+  }catch(e){ document.getElementById('admin-body').innerHTML='<div style="color:var(--red2);padding:20px">Error cargando agentes</div>'; }
+}
+function renderAgents(list){
+  const search=document.getElementById('admin-search').value.toLowerCase();
+  const filtered=list.filter(a=>!search||a.name.toLowerCase().includes(search)||a.email.toLowerCase().includes(search)||a.department?.toLowerCase().includes(search));
+  const colors=['#2563eb','#7c3aed','#0891b2','#16a34a','#d97706','#db2777','#dc2626'];
+  const roleLabel={admin:'Admin',supervisor:'Supervisor',agent:'Agente'};
+  const roleClass={admin:'br',supervisor:'ba',agent:'bb'};
+  document.getElementById('admin-body').innerHTML=filtered.map((a,i)=>`
+    <div class="agent-row">
+      <div class="agent-row-av" style="background:${colors[i%colors.length]}">${a.name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div class="agent-row-info">
+        <div class="agent-row-name">${a.name} <span class="badge ${roleClass[a.role]||'bgr'}">${roleLabel[a.role]||a.role}</span> ${!a.active?'<span class="badge br">Inactivo</span>':''}</div>
+        <div class="agent-row-email">${a.email} · ${a.department||'–'}</div>
+      </div>
+      <div class="agent-row-actions">
+        <button class="btn-sm" onclick="editAgent('${a.id}')">Editar</button>
+        <button class="btn-sm" onclick="toggleAgent('${a.id}')">${a.active?'Desactivar':'Activar'}</button>
+        <button class="btn-sm danger" onclick="deleteAgent('${a.id}')">Eliminar</button>
+      </div>
+    </div>`).join('');
+}
+function filterAgents(){ renderAgents(allAgents); }
+function openNewAgentModal(){ editingAgentId=null; document.getElementById('modal-title').textContent='Nuevo agente'; document.getElementById('m-name').value=''; document.getElementById('m-email').value=''; document.getElementById('m-pass').value=''; document.getElementById('agent-modal').classList.add('show'); }
+function editAgent(id){ const a=allAgents.find(x=>x.id===id); if(!a)return; editingAgentId=id; document.getElementById('modal-title').textContent='Editar agente'; document.getElementById('m-name').value=a.name; document.getElementById('m-email').value=a.email; document.getElementById('m-pass').value=''; document.getElementById('m-role').value=a.role||'agent'; document.getElementById('m-dept').value=a.department||'General'; document.getElementById('agent-modal').classList.add('show'); }
+function closeModal(){ document.getElementById('agent-modal').classList.remove('show'); }
+async function saveAgent(){
+  const body={name:document.getElementById('m-name').value.trim(),email:document.getElementById('m-email').value.trim(),password:document.getElementById('m-pass').value,role:document.getElementById('m-role').value,department:document.getElementById('m-dept').value};
+  if(!body.name||!body.email){ toast('Nombre y email son requeridos','var(--amb2)'); return; }
+  const url=editingAgentId?`${API}/admin/agents/${editingAgentId}`:`${API}/admin/agents`;
+  const method=editingAgentId?'PUT':'POST';
+  const res=await fetch(url,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},body:JSON.stringify(body)});
+  if(res.ok){ closeModal(); await loadAdminAgents(); toast(editingAgentId?'Agente actualizado':'Agente creado','var(--grn2)'); }
+  else { const d=await res.json(); toast(d.error||'Error guardando','var(--red2)'); }
+}
+async function toggleAgent(id){ const res=await fetch(`${API}/admin/agents/${id}/toggle`,{method:'PATCH',headers:{'Authorization':'Bearer '+jwtToken}}); if(res.ok){ await loadAdminAgents(); toast('Estado actualizado','var(--grn2)'); } }
+async function deleteAgent(id){ if(!confirm('¿Eliminar este agente?'))return; const res=await fetch(`${API}/admin/agents/${id}`,{method:'DELETE',headers:{'Authorization':'Bearer '+jwtToken}}); if(res.ok){ await loadAdminAgents(); toast('Agente eliminado','var(--amb2)'); } }
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(tab){
+  ['calls','recs','admin'].forEach(t=>{
+    document.getElementById('tab-'+t)?.classList.toggle('act',t===tab);
+  });
+  document.getElementById('main-app').style.display=tab==='calls'?'flex':'none';
+  document.getElementById('rec-panel').classList.toggle('act',tab==='recs');
+  document.getElementById('admin-panel').classList.toggle('act',tab==='admin');
+  if(tab==='recs'){ renderRecordings(); updateRecStats(); }
+  if(tab==='admin'){ loadAdminAgents(); }
+}
+
+// ── Status menu ───────────────────────────────────────────────────────────
+function toggleStatusMenu(){ document.getElementById('status-menu').classList.toggle('show'); }
+function setStatus(lbl,color){ document.getElementById('my-status').textContent=lbl; document.getElementById('my-dot').style.cssText=`background:${color};border-radius:50%;width:7px;height:7px`; document.getElementById('av-dot').style.background=color; document.getElementById('status-menu').classList.remove('show'); toast('Estado: '+lbl,color); if(ws&&ws.readyState===1) ws.send(JSON.stringify({type:'status_change',status:lbl})); }
+document.addEventListener('click',e=>{ const m=document.getElementById('status-menu'),p=document.getElementById('status-pill'); if(m&&!m.contains(e.target)&&!p.contains(e.target)) m.classList.remove('show'); });
+
+// ── Waveform ──────────────────────────────────────────────────────────────
+const wvEl=document.getElementById('waveform');
+for(let i=0;i<48;i++){const b=document.createElement('div');b.className='wb';b.style.height='4px';wvEl.appendChild(b)}
+let wvActive=false;
+function animWave(){ if(!wvActive)return; wvEl.querySelectorAll('.wb').forEach((b,i)=>{ const h=4+Math.random()*22+Math.sin(Date.now()/200+i*.5)*7; b.style.height=Math.max(3,h)+'px'; b.style.opacity=String(0.3+h/30*.7); }); requestAnimationFrame(()=>setTimeout(animWave,70)); }
+
+// ── Timer ─────────────────────────────────────────────────────────────────
+function startTimer(){ timerSec=0; clearInterval(timerInt); timerInt=setInterval(()=>{ timerSec++; const m=String(Math.floor(timerSec/60)).padStart(2,'0'),s=String(timerSec%60).padStart(2,'0'); document.getElementById('c-timer').textContent=m+':'+s; },1000); }
+function stopTimer(){ clearInterval(timerInt); }
+
+// ── Controles ─────────────────────────────────────────────────────────────
+function toggleMute(){ if(!activeCall)return; isMuted=!isMuted; activeCall.mute(isMuted); document.getElementById('cb-mute').classList.toggle('on',isMuted); toast(isMuted?'Silenciado':'Micrófono activo',isMuted?'var(--amb2)':'var(--grn2)'); }
+function toggleHold(){ document.getElementById('cb-hold').classList.toggle('on'); }
+function hangUp(){ if(activeCall){activeCall.disconnect();activeCall=null;} }
+function dk(k){ const i=document.getElementById('dial-in'); if(activeCall) activeCall.sendDigits(k); else i.value+=k; }
+function st(el){ document.querySelectorAll('.tag').forEach(t=>t.classList.remove('s')); el.classList.add('s'); }
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function toast(msg,color='var(--grn2)'){ const t=document.getElementById('toast'); document.getElementById('tdot').style.background=color; document.getElementById('tmsg').textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),4000); }
+
+// ── Inicio ────────────────────────────────────────────────────────────────
+checkSavedSession();
+</script>
+</body>
+</html>
