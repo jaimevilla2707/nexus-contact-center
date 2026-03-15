@@ -635,7 +635,36 @@ function handleWS(msg){
     toast('Llamada entrante: '+msg.call.from,'var(--grn2)');
   } else if(msg.type==='status_forced'){
     handleForcedStatus(msg);
+  } else if(msg.type==='recording_ready'){
+    // Grabación de ambos lados lista desde Twilio
+    receiveTwilioRecording(msg);
   }
+}
+
+function receiveTwilioRecording(msg){
+  const now = new Date(msg.timestamp || Date.now());
+  const rec = {
+    id: Date.now(),
+    from: msg.from || 'Desconocido',
+    dir: 'Entrante',
+    tag: document.querySelector('.tag.s')?.textContent || 'Sin disposición',
+    dur: msg.duration || 0,
+    notes: document.getElementById('notes')?.value || '',
+    url: msg.url,
+    blob: null,
+    date: now,
+    dateStr: now.toLocaleDateString('es-CO'),
+    timeStr: now.toLocaleTimeString('es-CO'),
+    agent: currentAgent?.name || 'Agente',
+    size: 0,
+    isTwilio: true, // grabación de ambos lados
+    colors: ['#2563eb','#7c3aed','#0891b2','#16a34a','#d97706','#db2777'],
+  };
+  recordings.unshift(rec);
+  updateRecStats();
+  const badge=document.getElementById('rec-count-badge');
+  badge.style.display='inline'; badge.textContent=recordings.length;
+  toast('Grabación lista (ambos lados) · '+fmtDur(rec.dur),'var(--grn2)');
 }
 function renderQueue(queue){
   const el=document.getElementById('queue-list');
@@ -792,6 +821,7 @@ function renderRecordings(){
         <div><div class="rec-caller">${r.from}</div><div class="rec-meta">${r.dateStr} ${r.timeStr} · ${r.agent} · ${fmtSize(r.size||0)}</div></div>
         <div class="rec-badges">
           <span class="badge ${r.dir==='Entrante'?'bg':'bb'}">${r.dir}</span>
+          ${r.isTwilio?'<span class="badge bg">🎙 Ambos lados</span>':'<span class="badge bgr">Solo agente</span>'}
           <span class="badge ${tc}">${r.tag}</span>
           <span class="badge bgr">${fmtDur(r.dur)}</span>
         </div>
@@ -824,7 +854,7 @@ function togglePlay(id){
 }
 function updateProgress(rec){ const pct=rec.audio.duration?(rec.audio.currentTime/rec.audio.duration)*100:0; const p=document.getElementById('rprog-'+rec.id),c=document.getElementById('rcur-'+rec.id); if(p)p.value=pct; if(c)c.textContent=fmtDur(Math.floor(rec.audio.currentTime)); const bars=document.querySelectorAll('#rwv-'+rec.id+' .rec-wave-bar'); const n=Math.floor(pct/100*bars.length); bars.forEach((b,i)=>b.classList.toggle('played',i<n)); }
 function seekRec(id,val){ const rec=recordings.find(r=>r.id===id); if(rec&&rec.audio.duration)rec.audio.currentTime=(val/100)*rec.audio.duration; }
-function downloadRec(id){ const rec=recordings.find(r=>r.id===id); if(!rec)return; const a=document.createElement('a'); a.href=rec.url; a.download=`nexus_${rec.from}_${rec.dateStr.replace(/\//g,'-')}.webm`; a.click(); }
+function downloadRec(id){ const rec=recordings.find(r=>r.id===id); if(!rec)return; const a=document.createElement('a'); a.href=rec.url; a.target='_blank'; if(!rec.isTwilio) a.download=`nexus_${rec.from}_${rec.dateStr.replace(/\//g,'-')}.webm`; a.click(); }
 function deleteRec(id){ recordings=recordings.filter(r=>r.id!==id); renderRecordings(); updateRecStats(); }
 function filterRecs(){ renderRecordings(); }
 function filterByType(type,btn){ recFilterType=type; document.querySelectorAll('.rec-filter').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); renderRecordings(); }
