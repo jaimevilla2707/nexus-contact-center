@@ -201,6 +201,45 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sa
 .btn-primary:hover{opacity:.9}
 .btn-secondary{flex:1;height:38px;background:var(--bg3);color:var(--t2);border:1px solid var(--b);border-radius:7px;font-size:12px;cursor:pointer}
 
+/* ── PANEL SUPERVISOR ── */
+.sup-panel{display:none;flex:1;flex-direction:column;overflow:hidden;background:var(--bg)}
+.sup-panel.act{display:flex}
+.sup-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 16px;border-bottom:1px solid var(--b);flex-shrink:0;background:var(--bg2)}
+.sup-kpi{background:var(--bg3);border-radius:8px;padding:10px 12px;text-align:center}
+.sup-kpi-val{font-size:22px;font-weight:700;line-height:1.1}
+.sup-kpi-lbl{font-size:9px;color:var(--t2);margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.sup-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.sup-body::-webkit-scrollbar{width:4px}
+.sup-body::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.sup-agent-card{background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:14px 16px;transition:border-color .12s}
+.sup-agent-card:hover{border-color:var(--b2)}
+.sup-agent-card.on-call{border-color:var(--grn);background:rgba(22,163,74,0.05)}
+.sup-agent-card.offline{opacity:.5}
+.sac-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.sac-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;position:relative}
+.sac-dot{position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg2)}
+.sac-name{font-size:13px;font-weight:700;color:var(--t)}
+.sac-email{font-size:11px;color:var(--t2);margin-top:1px}
+.sac-dept{font-size:10px;color:var(--t3);margin-top:1px}
+.sac-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.sac-status-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
+.sac-timer{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums}
+.sac-stats{display:flex;gap:8px;margin-bottom:10px}
+.sac-stat{background:var(--bg3);border-radius:6px;padding:6px 10px;text-align:center;flex:1}
+.sac-stat-val{font-size:14px;font-weight:700}
+.sac-stat-lbl{font-size:9px;color:var(--t2);margin-top:2px;text-transform:uppercase;letter-spacing:.03em}
+.sac-actions{display:flex;gap:6px;flex-wrap:wrap}
+.sac-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--b);background:var(--bg3);color:var(--t2);transition:all .12s}
+.sac-btn:hover{color:var(--t);border-color:var(--b2)}
+.sac-btn.danger:hover{color:var(--red2);border-color:var(--red);background:var(--red3)}
+.status-select{background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:4px 8px;color:var(--t);font-size:11px;outline:none;cursor:pointer}
+.sup-filters{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--b);flex-shrink:0;background:var(--bg2);flex-wrap:wrap;align-items:center}
+.sup-search{flex:1;min-width:160px;background:var(--bg3);border:1px solid var(--b);border-radius:6px;padding:6px 10px;color:var(--t);font-size:12px;outline:none;font-family:inherit}
+.sup-search:focus{border-color:var(--blu)}
+.sup-filter-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--b);background:var(--bg3);color:var(--t2);transition:all .12s}
+.sup-filter-btn.act{background:var(--blu3);color:var(--blu2);border-color:var(--blu)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--grn2);animation:pu 1s infinite;display:inline-block;margin-right:4px}
+
 /* ── INCOMING ── */
 .inc{display:none;position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--grn);border-radius:14px;padding:16px 18px;z-index:300;min-width:250px;animation:su .2s ease;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
 @keyframes su{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -251,6 +290,7 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sa
   <div class="hdr-nav">
     <div class="hdr-tab act" id="tab-calls" onclick="switchTab('calls')">📞 Llamadas</div>
     <div class="hdr-tab" id="tab-recs" onclick="switchTab('recs')">⏺ Grabaciones <span class="badge br" id="rec-count-badge" style="display:none">0</span></div>
+    <div class="hdr-tab" id="tab-supervisor" style="display:none" onclick="switchTab('supervisor')">👁 Supervisor <span class="badge br" id="sup-alert-badge" style="display:none">!</span></div>
     <div class="hdr-tab" id="tab-admin" style="display:none" onclick="switchTab('admin')">⚙ Agentes</div>
   </div>
   <div class="hdr-right">
@@ -390,6 +430,29 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sa
   </div>
 </div>
 
+<!-- ══ PANEL SUPERVISOR ══════════════════════════════════════════════════════ -->
+<div class="sup-panel" id="sup-panel">
+  <div class="sup-kpis">
+    <div class="sup-kpi"><div class="sup-kpi-val" style="color:var(--blu2)" id="sk-online">0</div><div class="sup-kpi-lbl">En línea</div></div>
+    <div class="sup-kpi"><div class="sup-kpi-val" style="color:var(--grn2)" id="sk-avail">0</div><div class="sup-kpi-lbl">Disponibles</div></div>
+    <div class="sup-kpi"><div class="sup-kpi-val" style="color:var(--grn2)" id="sk-oncall">0</div><div class="sup-kpi-lbl">En llamada</div></div>
+    <div class="sup-kpi"><div class="sup-kpi-val" style="color:var(--amb2)" id="sk-pause">0</div><div class="sup-kpi-lbl">En pausa</div></div>
+    <div class="sup-kpi"><div class="sup-kpi-val" style="color:var(--amb2)" id="sk-queue">0</div><div class="sup-kpi-lbl">Cola espera</div></div>
+  </div>
+  <div class="sup-filters">
+    <span style="font-size:11px;color:var(--t2)"><span class="live-dot"></span>Tiempo real</span>
+    <input class="sup-search" id="sup-search" placeholder="Buscar agente..." oninput="renderSupervisor()">
+    <button class="sup-filter-btn act" id="sf-all" onclick="supFilter('all',this)">Todos</button>
+    <button class="sup-filter-btn" onclick="supFilter('available',this)">Disponibles</button>
+    <button class="sup-filter-btn" onclick="supFilter('on-call',this)">En llamada</button>
+    <button class="sup-filter-btn" onclick="supFilter('pause',this)">En pausa</button>
+    <button class="sac-btn" style="margin-left:auto" onclick="loadSupervisorData()">🔄 Actualizar</button>
+  </div>
+  <div class="sup-body" id="sup-body">
+    <div style="text-align:center;padding:40px;color:var(--t3)">Cargando agentes en tiempo real...</div>
+  </div>
+</div>
+
 <!-- ══ ADMIN AGENTES ════════════════════════════════════════════════════════ -->
 <div class="admin-panel" id="admin-panel">
   <div class="admin-toolbar">
@@ -503,6 +566,7 @@ async function initApp(){
   // Mostrar tab admin si corresponde
   if(currentAgent.role==='admin'||currentAgent.role==='supervisor'){
     document.getElementById('tab-admin').style.display='flex';
+    document.getElementById('tab-supervisor').style.display='flex';
   }
   // Iniciar SDK Twilio
   await initTwilio();
@@ -562,8 +626,15 @@ function handleWS(msg){
   if(msg.type==='state_update'){
     document.getElementById('h-online').textContent=msg.agents?.length||0;
     renderQueue(msg.queue||[]);
+    if(document.getElementById('sup-panel').classList.contains('act')){
+      supAgents=msg.agents||[];
+      renderSupervisor();
+      updateSupKPIs(msg);
+    }
   } else if(msg.type==='incoming_call'){
     toast('Llamada entrante: '+msg.call.from,'var(--grn2)');
+  } else if(msg.type==='status_forced'){
+    handleForcedStatus(msg);
   }
 }
 function renderQueue(queue){
@@ -758,7 +829,178 @@ function deleteRec(id){ recordings=recordings.filter(r=>r.id!==id); renderRecord
 function filterRecs(){ renderRecordings(); }
 function filterByType(type,btn){ recFilterType=type; document.querySelectorAll('.rec-filter').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); renderRecordings(); }
 
-// ── Admin agentes ─────────────────────────────────────────────────────────
+// ── Panel Supervisor ──────────────────────────────────────────────────────
+let supAgents=[], supFilter_type='all', supLiveInt=null;
+
+async function loadSupervisorData(){
+  try{
+    const res=await fetch(`${API}/admin/status`,{headers:{'Authorization':'Bearer '+jwtToken}});
+    const data=await res.json();
+    supAgents=data.online||[];
+    renderSupervisor();
+    updateSupKPIs(data);
+  }catch(e){ console.error('Error cargando supervisor:',e); }
+}
+
+function startSupLive(){
+  loadSupervisorData();
+  supLiveInt=setInterval(loadSupervisorData,5000);
+}
+function stopSupLive(){ clearInterval(supLiveInt); supLiveInt=null; }
+
+function supFilter(type,btn){
+  supFilter_type=type;
+  document.querySelectorAll('.sup-filter-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  renderSupervisor();
+}
+
+function updateSupKPIs(data){
+  const agents=data.online||[];
+  const avail=agents.filter(a=>a.status==='available').length;
+  const oncall=agents.filter(a=>a.status==='on-call').length;
+  const pause=agents.filter(a=>!['available','on-call'].includes(a.status)).length;
+  document.getElementById('sk-online').textContent=agents.length;
+  document.getElementById('sk-avail').textContent=avail;
+  document.getElementById('sk-oncall').textContent=oncall;
+  document.getElementById('sk-pause').textContent=pause;
+  document.getElementById('sk-queue').textContent=(data.queue||[]).length;
+}
+
+function timeSinceStatus(iso){
+  if(!iso) return '–';
+  const s=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+  if(s<60) return s+'s';
+  if(s<3600) return Math.floor(s/60)+'m '+( s%60)+'s';
+  return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m';
+}
+
+function getStatusColor(status){
+  if(status==='available') return {bg:'var(--grn3)',color:'var(--grn2)',dot:'#4ade80'};
+  if(status==='on-call')   return {bg:'var(--blu3)',color:'var(--blu2)',dot:'#60a5fa'};
+  return {bg:'var(--amb3)',color:'var(--amb2)',dot:'#fbbf24'};
+}
+
+function getStatusLabel(status){
+  const map={'available':'Disponible','on-call':'En llamada','Break':'Break','Almuerzo':'Almuerzo','Baño':'Baño','Reunión':'Reunión','Post-llamada':'Post-llamada','No molestar':'No molestar','Ocupado':'Ocupado','Ausente':'Ausente','Capacitación':'Capacitación','Supervisión':'Supervisión','Retroalimentación':'Retroalimentación','Soporte técnico':'Soporte técnico','Fuera de línea':'Fuera de línea'};
+  return map[status]||status;
+}
+
+const agColors=['#2563eb','#7c3aed','#0891b2','#16a34a','#d97706','#db2777','#dc2626'];
+
+function renderSupervisor(){
+  const search=document.getElementById('sup-search')?.value.toLowerCase()||'';
+  const list=supAgents.filter(a=>{
+    const ms=!search||a.name.toLowerCase().includes(search)||a.email.toLowerCase().includes(search)||a.department?.toLowerCase().includes(search);
+    const mt=supFilter_type==='all'||
+      (supFilter_type==='available'&&a.status==='available')||
+      (supFilter_type==='on-call'&&a.status==='on-call')||
+      (supFilter_type==='pause'&&!['available','on-call'].includes(a.status));
+    return ms&&mt;
+  });
+
+  const el=document.getElementById('sup-body');
+  if(!list.length){ el.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">Sin agentes con este filtro</div>'; return; }
+
+  el.innerHTML=list.map((a,i)=>{
+    const sc=getStatusColor(a.status);
+    const av=a.name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+    const bg=agColors[i%agColors.length];
+    const isOnCall=a.status==='on-call';
+    const cardClass=isOnCall?'sup-agent-card on-call':'sup-agent-card';
+    return `<div class="${cardClass}" id="sac-${a.id}">
+      <div class="sac-top">
+        <div class="sac-av" style="background:${bg}">
+          ${av}
+          <div class="sac-dot" style="background:${sc.dot}"></div>
+        </div>
+        <div>
+          <div class="sac-name">${a.name}</div>
+          <div class="sac-email">${a.email}</div>
+          <div class="sac-dept">${a.department||'–'} · ${a.role==='supervisor'?'Supervisor':a.role==='admin'?'Admin':'Agente'}</div>
+        </div>
+        <div class="sac-right">
+          <span class="sac-status-badge" style="background:${sc.bg};color:${sc.color}">${getStatusLabel(a.status)}</span>
+          <span class="sac-timer" id="sac-time-${a.id}">⏱ ${timeSinceStatus(a.statusSince)} en este estado</span>
+        </div>
+      </div>
+      <div class="sac-stats">
+        <div class="sac-stat">
+          <div class="sac-stat-val" style="color:var(--grn2)">${a.callCount||0}</div>
+          <div class="sac-stat-lbl">Llamadas hoy</div>
+        </div>
+        <div class="sac-stat">
+          <div class="sac-stat-val" style="color:${isOnCall?'var(--grn2)':'var(--t3)'}">${isOnCall?'Activa':'–'}</div>
+          <div class="sac-stat-lbl">Llamada actual</div>
+        </div>
+        <div class="sac-stat">
+          <div class="sac-stat-val" style="color:var(--blu2)" id="sac-dur-${a.id}">${isOnCall?'En curso':'–'}</div>
+          <div class="sac-stat-lbl">Duración</div>
+        </div>
+      </div>
+      <div class="sac-actions">
+        <span style="font-size:11px;color:var(--t2);align-self:center">Cambiar estado:</span>
+        <select class="status-select" onchange="forceStatus('${a.id}',this.value,this)">
+          <option value="">– Seleccionar –</option>
+          <option value="available">✅ Disponible</option>
+          <option value="Break">⏸ Break</option>
+          <option value="Almuerzo">🍽 Almuerzo</option>
+          <option value="Baño">🚻 Baño</option>
+          <option value="Reunión">👥 Reunión</option>
+          <option value="Capacitación">📚 Capacitación</option>
+          <option value="Post-llamada">📝 Post-llamada</option>
+          <option value="No molestar">🔕 No molestar</option>
+          <option value="Ocupado">🔴 Ocupado</option>
+          <option value="Fuera de línea">⚫ Fuera de línea</option>
+        </select>
+        ${isOnCall?`<button class="sac-btn danger" onclick="supervisorEndCall('${a.id}')">📵 Finalizar llamada</button>`:''}
+        <button class="sac-btn" onclick="viewAgentRecs('${a.id}','${a.name}')">🎙 Ver grabaciones</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function forceStatus(agentId, status, sel){
+  if(!status) return;
+  try{
+    const res=await fetch(`${API}/admin/agents/${agentId}/force-status`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},
+      body:JSON.stringify({status})
+    });
+    if(res.ok){
+      toast(`Estado cambiado a "${getStatusLabel(status)}"`, 'var(--grn2)');
+      sel.value='';
+      await loadSupervisorData();
+    } else {
+      const d=await res.json();
+      toast(d.error||'Error cambiando estado','var(--red2)');
+      sel.value='';
+    }
+  }catch(e){ toast('Error: '+e.message,'var(--red2)'); sel.value=''; }
+}
+
+async function supervisorEndCall(agentId){
+  if(!confirm('¿Finalizar la llamada de este agente?')) return;
+  try{
+    await fetch(`${API}/admin/agents/${agentId}/end-call`,{method:'POST',headers:{'Authorization':'Bearer '+jwtToken}});
+    toast('Llamada finalizada','var(--amb2)');
+    await loadSupervisorData();
+  }catch(e){ toast('Error: '+e.message,'var(--red2)'); }
+}
+
+function viewAgentRecs(agentId, agentName){
+  switchTab('recs');
+  document.getElementById('rec-search').value=agentName;
+  filterRecs();
+  toast(`Mostrando grabaciones de ${agentName}`,'var(--blu2)');
+}
+
+// Recibir cambio forzado de estado via WebSocket
+function handleForcedStatus(msg){
+  toast(`Tu supervisor cambió tu estado a: ${getStatusLabel(msg.status)}`,'var(--amb2)');
+  setStatus(getStatusLabel(msg.status), msg.status==='available'?'#4ade80':msg.status==='on-call'?'#60a5fa':'#fbbf24');
+}
 async function loadAdminAgents(){
   try{
     const res=await fetch(`${API}/admin/agents`,{headers:{'Authorization':'Bearer '+jwtToken}});
@@ -804,14 +1046,18 @@ async function deleteAgent(id){ if(!confirm('¿Eliminar este agente?'))return; c
 
 // ── Tabs ──────────────────────────────────────────────────────────────────
 function switchTab(tab){
-  ['calls','recs','admin'].forEach(t=>{
+  ['calls','recs','supervisor','admin'].forEach(t=>{
     document.getElementById('tab-'+t)?.classList.toggle('act',t===tab);
   });
   document.getElementById('main-app').style.display=tab==='calls'?'flex':'none';
   document.getElementById('rec-panel').classList.toggle('act',tab==='recs');
+  document.getElementById('sup-panel').classList.toggle('act',tab==='supervisor');
   document.getElementById('admin-panel').classList.toggle('act',tab==='admin');
   if(tab==='recs'){ renderRecordings(); updateRecStats(); }
-  if(tab==='admin'){ loadAdminAgents(); }
+  if(tab==='supervisor'){ loadSupervisorData(); startSupLive(); }
+  if(tab==='admin'){ loadAdminAgents(); stopSupLive(); }
+  if(tab==='calls'){ stopSupLive(); }
+  if(tab==='recs'){ stopSupLive(); }
 }
 
 // ── Status menu ───────────────────────────────────────────────────────────
