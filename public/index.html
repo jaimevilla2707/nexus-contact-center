@@ -466,12 +466,13 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sa
 
 <!-- MODAL NUEVO/EDITAR AGENTE -->
 <div class="modal-overlay" id="agent-modal">
-  <div class="modal">
+  <div class="modal" style="max-width:480px">
     <div class="modal-title" id="modal-title">Nuevo agente</div>
-    <div class="mf"><label>Nombre completo</label><input class="mi" id="m-name" placeholder="Nombre Apellido"></div>
-    <div class="mf"><label>Correo electrónico</label><input class="mi" id="m-email" type="email" placeholder="nombre@nexus.com"></div>
-    <div class="mf"><label>Contraseña</label><input class="mi" id="m-pass" type="password" placeholder="Mínimo 6 caracteres"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mf" style="grid-column:span 2"><label>Nombre completo *</label><input class="mi" id="m-name" placeholder="Nombre Apellido"></div>
+      <div class="mf" style="grid-column:span 2"><label>Correo electrónico *</label><input class="mi" id="m-email" type="email" placeholder="nombre@nexus.com"></div>
+      <div class="mf"><label>Contraseña <span id="m-pass-hint" style="color:var(--t3);font-weight:400">(dejar vacío = no cambiar)</span></label><input class="mi" id="m-pass" type="password" placeholder="Nueva contraseña"></div>
+      <div class="mf"><label>Confirmar contraseña</label><input class="mi" id="m-pass2" type="password" placeholder="Repetir contraseña"></div>
       <div class="mf"><label>Rol</label>
         <select class="mi-sel" id="m-role">
           <option value="agent">Agente</option>
@@ -490,11 +491,15 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sa
           <option>General</option>
         </select>
       </div>
+      <div class="mf" style="grid-column:span 2"><label>Teléfono (opcional)</label><input class="mi" id="m-phone" placeholder="+57 300 000 0000"></div>
+      <div class="mf" style="grid-column:span 2"><label>Notas internas (opcional)</label><input class="mi" id="m-notes" placeholder="Turno, sede, observaciones..."></div>
     </div>
+    <div id="modal-error" style="display:none;background:var(--red3);color:var(--red2);border:1px solid var(--red);border-radius:6px;padding:8px 12px;font-size:12px;margin-top:8px"></div>
     <div class="modal-btns">
       <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn-primary" onclick="saveAgent()">Guardar</button>
+      <button class="btn-primary" id="modal-save-btn" onclick="saveAgent()">Guardar agente</button>
     </div>
+    <div style="font-size:10px;color:var(--t3);margin-top:10px;text-align:center">* Campos obligatorios · Los cambios aplican inmediatamente</div>
   </div>
 </div>
 
@@ -1044,35 +1049,154 @@ function renderAgents(list){
   const colors=['#2563eb','#7c3aed','#0891b2','#16a34a','#d97706','#db2777','#dc2626'];
   const roleLabel={admin:'Admin',supervisor:'Supervisor',agent:'Agente'};
   const roleClass={admin:'br',supervisor:'ba',agent:'bb'};
-  document.getElementById('admin-body').innerHTML=filtered.map((a,i)=>`
-    <div class="agent-row">
+
+  if(!filtered.length){
+    document.getElementById('admin-body').innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">No se encontraron agentes</div>';
+    return;
+  }
+
+  document.getElementById('admin-body').innerHTML=`
+    <div style="font-size:11px;color:var(--t2);margin-bottom:10px">${filtered.length} agente${filtered.length!==1?'s':''} encontrado${filtered.length!==1?'s':''}</div>
+    ${filtered.map((a,i)=>`
+    <div class="agent-row" style="${!a.active?'opacity:.5':''}">
       <div class="agent-row-av" style="background:${colors[i%colors.length]}">${a.name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase()}</div>
-      <div class="agent-row-info">
-        <div class="agent-row-name">${a.name} <span class="badge ${roleClass[a.role]||'bgr'}">${roleLabel[a.role]||a.role}</span> ${!a.active?'<span class="badge br">Inactivo</span>':''}</div>
-        <div class="agent-row-email">${a.email} · ${a.department||'–'}</div>
+      <div class="agent-row-info" style="flex:1">
+        <div class="agent-row-name">
+          ${a.name}
+          <span class="badge ${roleClass[a.role]||'bgr'}">${roleLabel[a.role]||a.role}</span>
+          ${!a.active?'<span class="badge br">Inactivo</span>':'<span class="badge bg">Activo</span>'}
+        </div>
+        <div class="agent-row-email">${a.email}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:2px">${a.department||'Sin departamento'}${a.phone?' · '+a.phone:''}</div>
       </div>
       <div class="agent-row-actions">
-        <button class="btn-sm" onclick="editAgent('${a.id}')">Editar</button>
-        <button class="btn-sm" onclick="toggleAgent('${a.id}')">${a.active?'Desactivar':'Activar'}</button>
-        <button class="btn-sm danger" onclick="deleteAgent('${a.id}')">Eliminar</button>
+        <button class="btn-sm" onclick="editAgent('${a.id}')">✏️ Editar</button>
+        <button class="btn-sm" onclick="resetPassword('${a.id}')">🔑 Clave</button>
+        <button class="btn-sm" onclick="toggleAgent('${a.id}')">${a.active?'⏸ Desactivar':'▶ Activar'}</button>
+        <button class="btn-sm danger" onclick="deleteAgent('${a.id}')">🗑 Eliminar</button>
       </div>
-    </div>`).join('');
+    </div>`).join('')}
+  `;
 }
 function filterAgents(){ renderAgents(allAgents); }
-function openNewAgentModal(){ editingAgentId=null; document.getElementById('modal-title').textContent='Nuevo agente'; document.getElementById('m-name').value=''; document.getElementById('m-email').value=''; document.getElementById('m-pass').value=''; document.getElementById('agent-modal').classList.add('show'); }
-function editAgent(id){ const a=allAgents.find(x=>x.id===id); if(!a)return; editingAgentId=id; document.getElementById('modal-title').textContent='Editar agente'; document.getElementById('m-name').value=a.name; document.getElementById('m-email').value=a.email; document.getElementById('m-pass').value=''; document.getElementById('m-role').value=a.role||'agent'; document.getElementById('m-dept').value=a.department||'General'; document.getElementById('agent-modal').classList.add('show'); }
-function closeModal(){ document.getElementById('agent-modal').classList.remove('show'); }
-async function saveAgent(){
-  const body={name:document.getElementById('m-name').value.trim(),email:document.getElementById('m-email').value.trim(),password:document.getElementById('m-pass').value,role:document.getElementById('m-role').value,department:document.getElementById('m-dept').value};
-  if(!body.name||!body.email){ toast('Nombre y email son requeridos','var(--amb2)'); return; }
-  const url=editingAgentId?`${API}/admin/agents/${editingAgentId}`:`${API}/admin/agents`;
-  const method=editingAgentId?'PUT':'POST';
-  const res=await fetch(url,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},body:JSON.stringify(body)});
-  if(res.ok){ closeModal(); await loadAdminAgents(); toast(editingAgentId?'Agente actualizado':'Agente creado','var(--grn2)'); }
-  else { const d=await res.json(); toast(d.error||'Error guardando','var(--red2)'); }
+function openNewAgentModal(){
+  editingAgentId=null;
+  document.getElementById('modal-title').textContent='Nuevo agente';
+  document.getElementById('m-name').value='';
+  document.getElementById('m-email').value='';
+  document.getElementById('m-pass').value='';
+  document.getElementById('m-pass2').value='';
+  document.getElementById('m-phone').value='';
+  document.getElementById('m-notes').value='';
+  document.getElementById('m-role').value='agent';
+  document.getElementById('m-dept').value='Soporte Técnico';
+  document.getElementById('m-pass-hint').textContent='(mínimo 6 caracteres)';
+  document.getElementById('modal-error').style.display='none';
+  document.getElementById('modal-save-btn').textContent='Crear agente';
+  document.getElementById('agent-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('m-name').focus(),100);
 }
-async function toggleAgent(id){ const res=await fetch(`${API}/admin/agents/${id}/toggle`,{method:'PATCH',headers:{'Authorization':'Bearer '+jwtToken}}); if(res.ok){ await loadAdminAgents(); toast('Estado actualizado','var(--grn2)'); } }
-async function deleteAgent(id){ if(!confirm('¿Eliminar este agente?'))return; const res=await fetch(`${API}/admin/agents/${id}`,{method:'DELETE',headers:{'Authorization':'Bearer '+jwtToken}}); if(res.ok){ await loadAdminAgents(); toast('Agente eliminado','var(--amb2)'); } }
+
+function editAgent(id){
+  const a=allAgents.find(x=>x.id===id);
+  if(!a) return;
+  editingAgentId=id;
+  document.getElementById('modal-title').textContent='Editar agente';
+  document.getElementById('m-name').value=a.name;
+  document.getElementById('m-email').value=a.email;
+  document.getElementById('m-pass').value='';
+  document.getElementById('m-pass2').value='';
+  document.getElementById('m-phone').value=a.phone||'';
+  document.getElementById('m-notes').value=a.notes||'';
+  document.getElementById('m-role').value=a.role||'agent';
+  document.getElementById('m-dept').value=a.department||'General';
+  document.getElementById('m-pass-hint').textContent='(dejar vacío = no cambiar)';
+  document.getElementById('modal-error').style.display='none';
+  document.getElementById('modal-save-btn').textContent='Guardar cambios';
+  document.getElementById('agent-modal').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('agent-modal').classList.remove('show');
+  editingAgentId=null;
+}
+
+function showModalError(msg){
+  const el=document.getElementById('modal-error');
+  el.textContent=msg; el.style.display='block';
+}
+
+async function saveAgent(){
+  const name  = document.getElementById('m-name').value.trim();
+  const email = document.getElementById('m-email').value.trim();
+  const pass  = document.getElementById('m-pass').value;
+  const pass2 = document.getElementById('m-pass2').value;
+  const role  = document.getElementById('m-role').value;
+  const dept  = document.getElementById('m-dept').value;
+  const phone = document.getElementById('m-phone').value.trim();
+  const notes = document.getElementById('m-notes').value.trim();
+
+  document.getElementById('modal-error').style.display='none';
+
+  if(!name){ showModalError('El nombre es obligatorio'); return; }
+  if(!email){ showModalError('El correo electrónico es obligatorio'); return; }
+  if(!email.includes('@')){ showModalError('El correo electrónico no es válido'); return; }
+  if(!editingAgentId && !pass){ showModalError('La contraseña es obligatoria para nuevos agentes'); return; }
+  if(pass && pass.length < 6){ showModalError('La contraseña debe tener al menos 6 caracteres'); return; }
+  if(pass && pass !== pass2){ showModalError('Las contraseñas no coinciden'); return; }
+
+  const btn=document.getElementById('modal-save-btn');
+  btn.disabled=true; btn.textContent='Guardando...';
+
+  const body={name,email,role,department:dept,phone,notes};
+  if(pass) body.password=pass;
+
+  try{
+    const url=editingAgentId?`${API}/admin/agents/${editingAgentId}`:`${API}/admin/agents`;
+    const method=editingAgentId?'PUT':'POST';
+    const res=await fetch(url,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},body:JSON.stringify(body)});
+    const data=await res.json();
+    if(res.ok){
+      closeModal();
+      await loadAdminAgents();
+      toast(editingAgentId?`✓ ${name} actualizado correctamente`:`✓ ${name} creado correctamente`,'var(--grn2)');
+    } else {
+      showModalError(data.error||'Error al guardar. Intenta de nuevo.');
+    }
+  }catch(e){
+    showModalError('Error de conexión: '+e.message);
+  } finally {
+    btn.disabled=false;
+    btn.textContent=editingAgentId?'Guardar cambios':'Crear agente';
+  }
+}
+
+async function toggleAgent(id){
+  const a=allAgents.find(x=>x.id===id);
+  if(!a) return;
+  const action=a.active?'desactivar':'activar';
+  if(!confirm(`¿Quieres ${action} a ${a.name}?`)) return;
+  const res=await fetch(`${API}/admin/agents/${id}/toggle`,{method:'PATCH',headers:{'Authorization':'Bearer '+jwtToken}});
+  if(res.ok){ await loadAdminAgents(); toast(`${a.name} ${a.active?'desactivado':'activado'}`,'var(--grn2)'); }
+}
+
+async function deleteAgent(id){
+  const a=allAgents.find(x=>x.id===id);
+  if(!a) return;
+  if(!confirm(`¿Eliminar permanentemente a ${a.name}?\n\nEsta acción no se puede deshacer.`)) return;
+  const res=await fetch(`${API}/admin/agents/${id}`,{method:'DELETE',headers:{'Authorization':'Bearer '+jwtToken}});
+  if(res.ok){ await loadAdminAgents(); toast(`${a.name} eliminado`,'var(--amb2)'); }
+}
+
+async function resetPassword(id){
+  const a=allAgents.find(x=>x.id===id);
+  if(!a) return;
+  const newPass=prompt(`Nueva contraseña para ${a.name} (mínimo 6 caracteres):`);
+  if(!newPass) return;
+  if(newPass.length<6){ toast('La contraseña debe tener al menos 6 caracteres','var(--amb2)'); return; }
+  const res=await fetch(`${API}/admin/agents/${id}`,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},body:JSON.stringify({password:newPass})});
+  if(res.ok){ toast(`Contraseña de ${a.name} actualizada`,'var(--grn2)'); }
+}
 
 // ── Tabs ──────────────────────────────────────────────────────────────────
 function switchTab(tab){
