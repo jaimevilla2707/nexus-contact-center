@@ -7,7 +7,6 @@ nexus-contact-center/
 ├── agents.json        ← Lista de agentes (editable)
 ├── package.json
 ├── .gitignore
-├── .env.example       ← Variables de entorno (NO subir el .env real)
 └── public/
     └── index.html     ← Frontend completo
 ```
@@ -31,12 +30,13 @@ nexus-contact-center/
 En Railway → tu proyecto → Variables, agrega:
 
 ```
-TWILIO_ACCOUNT_SID=AC55ccd3578af900f2697ec4b653b5a20e
-TWILIO_AUTH_TOKEN=10c554fe5d75c427dab8f647515d33cd
-TWILIO_API_KEY=SKe6045832478715180e266ef87eadf1f4
-TWILIO_API_SECRET=F3lFLeE04XJqJQCWcHTyvMcxHGPhiqHq
-TWILIO_APP_SID=AP31b457f4b41645d2c31fa7cccb41c847
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_API_KEY=SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_API_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_APP_SID=APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 JWT_SECRET=pon_aqui_una_frase_larga_y_secreta_2024
+RAILWAY_TOKEN=tu_token_de_railway
 ```
 
 ## Paso 4 — Actualizar webhooks de Twilio
@@ -44,28 +44,15 @@ JWT_SECRET=pon_aqui_una_frase_larga_y_secreta_2024
 Una vez Railway te dé la URL (ej: https://nexus-cc.railway.app), actualiza:
 
 **TwiML App** (Voice → TwiML Apps → nexus):
-- Voice Request URL: `https://nexus-cc.railway.app/voice/outgoing`
+- Voice Request URL: `https://tu-url.railway.app/voice/outgoing`
 
 **Número Twilio** (cuando lo compres):
-- Incoming Webhook: `https://nexus-cc.railway.app/voice/incoming`
-
-## Cómo agregar/editar agentes
-
-**Opción A — Desde el panel admin:**
-- Inicia sesión con admin@nexus.com / Admin2024*
-- Ve a la pestaña ⚙ Agentes
-- Crea, edita o desactiva agentes
-
-**Opción B — Editando agents.json directamente:**
-- Edita el archivo y vuelve a subir a GitHub
-- Railway redespliega automáticamente
+- Incoming Webhook: `https://tu-url.railway.app/voice/incoming`
 
 ## Credenciales de acceso inicial
 
 | Email | Contraseña | Rol |
 |-------|-----------|-----|
-| admin@nexus.com | Admin2024* | Administrador |
-| Viviana1709@nexus.com | Viviana1709 | Agente |
-| ana.torres@nexus.com | Ana2024 | Supervisor |
+| admin@nexus.com | (ver variables de entorno) | Administrador |
 
-**Cambia las contraseñas después del primer login desde el panel admin.**
+**Cambia las contraseñas desde el panel ⚙ Agentes después del primer login.**
