@@ -40,9 +40,7 @@ const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 let agentsCache = null; // Cache en memoria
 
 function loadAgents() {
-  // Si ya hay cache, usar eso (incluye cambios del admin)
   if (agentsCache) return agentsCache;
-  // Primero intentar desde variable de entorno AGENTS_DATA (base64)
   if (process.env.AGENTS_DATA) {
     try {
       agentsCache = JSON.parse(Buffer.from(process.env.AGENTS_DATA, 'base64').toString('utf8'));
@@ -51,28 +49,80 @@ function loadAgents() {
       console.error('[AGENTS] Error leyendo AGENTS_DATA:', e.message);
     }
   }
-  // Fallback: leer desde archivo
   try {
     agentsCache = JSON.parse(fs.readFileSync(path.join(__dirname, 'agents.json'), 'utf8'));
     return agentsCache;
   } catch(e) {
-    console.error('[AGENTS] Error cargando agents.json:', e.message);
     agentsCache = [];
     return agentsCache;
   }
 }
 
 function saveAgents(agents) {
-  // Actualizar cache en memoria (persiste mientras el servidor esté corriendo)
   agentsCache = agents;
-  // Intentar escribir en archivo como backup
-  try {
-    fs.writeFileSync(path.join(__dirname, 'agents.json'), JSON.stringify(agents, null, 2));
-  } catch(e) {
-    // En Railway el filesystem es de solo lectura — usar solo cache en memoria
-  }
-  // Log para debugging
+  // Actualizar AGENTS_DATA en Railway via API para persistencia permanente
+  const encoded = Buffer.from(JSON.stringify(agents)).toString('base64');
+  updateRailwayVariable('AGENTS_DATA', encoded);
   console.log(`[AGENTS] Cache actualizado: ${agents.length} agentes`);
+}
+
+// Actualizar variable de entorno en Railway via GraphQL API
+async function updateRailwayVariable(key, value) {
+  const token    = process.env.RAILWAY_TOKEN;
+  const envId    = process.env.RAILWAY_ENVIRONMENT_ID;
+  const serviceId= process.env.RAILWAY_SERVICE_ID;
+  const projectId= process.env.RAILWAY_PROJECT_ID;
+
+  if (!token || !envId || !serviceId) {
+    // Sin token de Railway, solo guardar en memoria (cambios se pierden al reiniciar)
+    return;
+  }
+
+  try {
+    const https = require('https');
+    const mutation = JSON.stringify({
+      query: `mutation {
+        variableUpsert(input: {
+          projectId: "${projectId}"
+          environmentId: "${envId}"
+          serviceId: "${serviceId}"
+          name: "${key}"
+          value: "${value}"
+        })
+      }`
+    });
+
+    const options = {
+      hostname: 'backboard.railway.app',
+      path: '/graphql/v2',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'Content-Length': Buffer.byteLength(mutation),
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(data);
+          if (result.errors) {
+            console.error('[RAILWAY] Error actualizando variable:', result.errors[0]?.message);
+          } else {
+            console.log(`[RAILWAY] Variable ${key} actualizada permanentemente`);
+          }
+        } catch(e) {}
+      });
+    });
+    req.on('error', (e) => console.error('[RAILWAY] Error de conexión:', e.message));
+    req.write(mutation);
+    req.end();
+  } catch(e) {
+    console.error('[RAILWAY] Error actualizando variable:', e.message);
+  }
 }
 
 // ── Estado en tiempo real ─────────────────────────────────────────────────
