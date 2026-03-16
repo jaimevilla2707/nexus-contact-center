@@ -37,31 +37,42 @@ const {
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 // ── Cargar agentes (desde variable de entorno o archivo) ──────────────────
+let agentsCache = null; // Cache en memoria
+
 function loadAgents() {
+  // Si ya hay cache, usar eso (incluye cambios del admin)
+  if (agentsCache) return agentsCache;
   // Primero intentar desde variable de entorno AGENTS_DATA (base64)
   if (process.env.AGENTS_DATA) {
     try {
-      return JSON.parse(Buffer.from(process.env.AGENTS_DATA, 'base64').toString('utf8'));
+      agentsCache = JSON.parse(Buffer.from(process.env.AGENTS_DATA, 'base64').toString('utf8'));
+      return agentsCache;
     } catch(e) {
       console.error('[AGENTS] Error leyendo AGENTS_DATA:', e.message);
     }
   }
   // Fallback: leer desde archivo
   try {
-    return JSON.parse(fs.readFileSync(path.join(__dirname, 'agents.json'), 'utf8'));
+    agentsCache = JSON.parse(fs.readFileSync(path.join(__dirname, 'agents.json'), 'utf8'));
+    return agentsCache;
   } catch(e) {
     console.error('[AGENTS] Error cargando agents.json:', e.message);
-    return [];
+    agentsCache = [];
+    return agentsCache;
   }
 }
+
 function saveAgents(agents) {
-  // En Railway guardamos en archivo temporal (se pierde al reiniciar)
-  // Para persistencia real usar una base de datos
+  // Actualizar cache en memoria (persiste mientras el servidor esté corriendo)
+  agentsCache = agents;
+  // Intentar escribir en archivo como backup
   try {
     fs.writeFileSync(path.join(__dirname, 'agents.json'), JSON.stringify(agents, null, 2));
   } catch(e) {
-    console.error('[AGENTS] No se pudo guardar agents.json:', e.message);
+    // En Railway el filesystem es de solo lectura — usar solo cache en memoria
   }
+  // Log para debugging
+  console.log(`[AGENTS] Cache actualizado: ${agents.length} agentes`);
 }
 
 // ── Estado en tiempo real ─────────────────────────────────────────────────
@@ -149,6 +160,17 @@ app.get('/token', authMiddleware, (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────
 // ADMIN — GESTIÓN DE AGENTES
 // ─────────────────────────────────────────────────────────────────────────
+
+// Exportar agentes como base64 (para actualizar AGENTS_DATA en Railway)
+app.get('/admin/agents/export', adminMiddleware, (req, res) => {
+  const agents = loadAgents();
+  const encoded = Buffer.from(JSON.stringify(agents)).toString('base64');
+  res.json({ 
+    encoded,
+    count: agents.length,
+    instruction: 'Copia el valor de "encoded" y actualiza la variable AGENTS_DATA en Railway'
+  });
+});
 
 // Listar agentes
 app.get('/admin/agents', adminMiddleware, (req, res) => {
@@ -266,6 +288,8 @@ app.post('/voice/incoming', (req, res) => {
       record: 'record-from-answer-dual',
       recordingStatusCallback: '/voice/recording-dual-done',
       recordingStatusCallbackMethod: 'POST',
+      timeout: 30,
+      timeLimit: 1800, // 30 minutos máximo
     });
     dial.client(availId);
     assignCall(CallSid, availId);
@@ -304,6 +328,7 @@ app.post('/voice/outgoing', (req, res) => {
       record: 'record-from-answer-dual',
       recordingStatusCallback: '/voice/recording-dual-done',
       recordingStatusCallbackMethod: 'POST',
+      timeLimit: 1800, // 30 minutos máximo
     });
     dial.number(To);
   } else {
@@ -312,6 +337,7 @@ app.post('/voice/outgoing', (req, res) => {
       record: 'record-from-answer-dual',
       recordingStatusCallback: '/voice/recording-dual-done',
       recordingStatusCallbackMethod: 'POST',
+      timeLimit: 1800, // 30 minutos máximo
     });
     dial.client(To);
   }
