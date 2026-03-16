@@ -240,6 +240,50 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sa
 .sup-filter-btn.act{background:var(--blu3);color:var(--blu2);border-color:var(--blu)}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--grn2);animation:pu 1s infinite;display:inline-block;margin-right:4px}
 
+/* ── ACW POPUP ── */
+.acw-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.acw-overlay.show{display:flex}
+.acw-card{background:var(--bg2);border:1px solid var(--b2);border-radius:16px;padding:24px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.acw-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.acw-title{font-size:16px;font-weight:700;color:var(--t)}
+.acw-timer-wrap{display:flex;flex-direction:column;align-items:center;gap:2px}
+.acw-timer{font-size:28px;font-weight:300;color:var(--amb2);font-variant-numeric:tabular-nums;line-height:1}
+.acw-timer.urgent{color:var(--red2);animation:pu .5s infinite}
+.acw-timer-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.acw-timer-bar{width:100%;height:4px;background:var(--bg4);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.acw-timer-fill{height:100%;background:var(--amb2);border-radius:2px;transition:width 1s linear;width:100%}
+.acw-timer-fill.urgent{background:var(--red2)}
+.acw-call-info{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;margin-bottom:16px;border:1px solid var(--b)}
+.acw-call-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blu),var(--pur));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.acw-call-from{font-size:13px;font-weight:600;color:var(--t)}
+.acw-call-meta{font-size:11px;color:var(--t2);margin-top:2px}
+.acw-section{margin-bottom:14px}
+.acw-label{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.acw-reasons{display:flex;flex-wrap:wrap;gap:6px}
+.acw-reason{padding:6px 12px;border-radius:20px;border:1px solid var(--b);background:var(--bg3);color:var(--t2);font-size:11px;font-weight:500;cursor:pointer;transition:all .12s}
+.acw-reason:hover{border-color:var(--b2);color:var(--t)}
+.acw-reason.sel{background:var(--blu3);color:var(--blu2);border-color:var(--blu)}
+.acw-reason.sel.green{background:var(--grn3);color:var(--grn2);border-color:var(--grn)}
+.acw-reason.sel.red{background:var(--red3);color:var(--red2);border-color:var(--red)}
+.acw-reason.sel.amber{background:var(--amb3);color:var(--amb2);border-color:var(--amb)}
+.acw-reason.sel.purple{background:var(--pur3);color:var(--pur2);border-color:var(--pur)}
+.acw-textarea{width:100%;background:var(--bg3);border:1px solid var(--b);border-radius:8px;padding:10px 12px;color:var(--t);font-size:12px;resize:none;outline:none;font-family:inherit;min-height:80px;line-height:1.5;transition:border-color .12s}
+.acw-textarea:focus{border-color:var(--blu)}
+.acw-actions{display:flex;gap:8px;margin-top:16px}
+.acw-submit{flex:1;height:42px;background:var(--blu);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .12s}
+.acw-submit:hover{opacity:.9}
+.acw-skip{height:42px;padding:0 16px;background:var(--bg3);color:var(--t2);border:1px solid var(--b);border-radius:8px;font-size:12px;cursor:pointer;transition:all .12s}
+.acw-skip:hover{color:var(--t)}
+.acw-timeline{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin-top:8px}
+.acw-timeline::-webkit-scrollbar{width:3px}
+.acw-timeline::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.tl-item{display:flex;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:7px;border:1px solid var(--b)}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tl-content{flex:1}
+.tl-reason{font-size:12px;font-weight:600;color:var(--t)}
+.tl-note{font-size:11px;color:var(--t2);margin-top:3px;line-height:1.4}
+.tl-meta{font-size:10px;color:var(--t3);margin-top:4px}
+
 /* ── INCOMING ── */
 .inc{display:none;position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--grn);border-radius:14px;padding:16px 18px;z-index:300;min-width:250px;animation:su .2s ease;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
 @keyframes su{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -503,6 +547,68 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,'Segoe UI',sa
   </div>
 </div>
 
+<!-- ══ ACW POPUP ══════════════════════════════════════════════════════════ -->
+<div class="acw-overlay" id="acw-overlay">
+  <div class="acw-card">
+    <div class="acw-header">
+      <div>
+        <div class="acw-title">⏱ Post-llamada — ACW</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:2px">Completa el registro antes de que termine el tiempo</div>
+      </div>
+      <div class="acw-timer-wrap">
+        <div class="acw-timer" id="acw-timer">60</div>
+        <div class="acw-timer-lbl">segundos</div>
+      </div>
+    </div>
+    <div class="acw-timer-bar"><div class="acw-timer-fill" id="acw-bar"></div></div>
+
+    <div class="acw-call-info">
+      <div class="acw-call-av" id="acw-av">?</div>
+      <div>
+        <div class="acw-call-from" id="acw-from">–</div>
+        <div class="acw-call-meta" id="acw-meta">–</div>
+      </div>
+    </div>
+
+    <div class="acw-section">
+      <div class="acw-label">Motivo de llamada *</div>
+      <div class="acw-reasons">
+        <div class="acw-reason green" onclick="selectReason(this,'Consulta general')">💬 Consulta general</div>
+        <div class="acw-reason green" onclick="selectReason(this,'Soporte técnico')">🔧 Soporte técnico</div>
+        <div class="acw-reason green" onclick="selectReason(this,'Facturación')">💳 Facturación</div>
+        <div class="acw-reason green" onclick="selectReason(this,'Ventas')">💰 Ventas</div>
+        <div class="acw-reason green" onclick="selectReason(this,'Retención')">🤝 Retención</div>
+        <div class="acw-reason amber" onclick="selectReason(this,'Queja')">⚠️ Queja</div>
+        <div class="acw-reason amber" onclick="selectReason(this,'Reclamo')">📋 Reclamo</div>
+        <div class="acw-reason red" onclick="selectReason(this,'Cancelación')">❌ Cancelación</div>
+        <div class="acw-reason purple" onclick="selectReason(this,'Solicitud especial')">⭐ Solicitud especial</div>
+        <div class="acw-reason" onclick="selectReason(this,'Otro')">📌 Otro</div>
+      </div>
+    </div>
+
+    <div class="acw-section">
+      <div class="acw-label">Resultado de la llamada</div>
+      <div class="acw-reasons" id="acw-outcomes">
+        <div class="acw-reason green" onclick="selectOutcome(this,'Resuelto')">✅ Resuelto</div>
+        <div class="acw-reason amber" onclick="selectOutcome(this,'Seguimiento requerido')">🔄 Seguimiento requerido</div>
+        <div class="acw-reason red" onclick="selectOutcome(this,'Escalado')">🔺 Escalado</div>
+        <div class="acw-reason" onclick="selectOutcome(this,'Info brindada')">ℹ️ Info brindada</div>
+        <div class="acw-reason purple" onclick="selectOutcome(this,'Ticket creado')">🎫 Ticket creado</div>
+      </div>
+    </div>
+
+    <div class="acw-section">
+      <div class="acw-label">Notas de la llamada</div>
+      <textarea class="acw-textarea" id="acw-notes" placeholder="Describe brevemente lo que se trató en la llamada, acuerdos, próximos pasos..."></textarea>
+    </div>
+
+    <div class="acw-actions">
+      <button class="acw-skip" onclick="skipACW()">Omitir</button>
+      <button class="acw-submit" onclick="submitACW()">✓ Guardar y finalizar</button>
+    </div>
+  </div>
+</div>
+
 <!-- INCOMING + TOAST -->
 <div class="inc" id="inc-popup">
   <div class="inc-ring"><div class="rdot"></div>Llamada entrante</div>
@@ -738,18 +844,136 @@ function showCallUI(target,dir){
 }
 function endCallUI(reason){
   stopTimer(); wvActive=false; stopRecording();
-  document.getElementById('c-st').textContent=reason; document.getElementById('c-st').className='badge br';
+  document.getElementById('c-st').textContent=reason;
+  document.getElementById('c-st').className='badge br';
   document.getElementById('i-status').textContent=reason;
   toast('Llamada '+reason.toLowerCase(),'var(--amb2)');
+
+  // Guardar info de la llamada para el ACW
+  acwCallData = {
+    from: document.getElementById('i-from').textContent || '–',
+    dir: document.getElementById('i-dir').textContent || '–',
+    duration: timerSec,
+    endTime: new Date(),
+    reason: document.getElementById('i-reason')?.textContent || '',
+  };
+
+  // Ocultar panel de llamada activa
   setTimeout(()=>{
     document.getElementById('idle').style.display='flex';
     document.getElementById('active-call').style.display='none';
     document.getElementById('c-timer').textContent='00:00';
-    document.getElementById('notes').value='';
-    document.querySelectorAll('.tag').forEach(t=>t.classList.remove('s'));
-    isMuted=false; document.getElementById('cb-mute').classList.remove('on');
+    isMuted=false;
+    document.getElementById('cb-mute').classList.remove('on');
     activeCall=null;
-  },2000);
+    // Cambiar estado a Post-llamada y mostrar ACW
+    setStatus('Post-llamada','#fbbf24');
+    showACW();
+  },1500);
+}
+
+// ── Sistema ACW ───────────────────────────────────────────────────────────
+let acwCallData={}, acwSelectedReason='', acwSelectedOutcome='', acwTimerInt=null, acwSeconds=60;
+
+function showACW(){
+  const d=acwCallData;
+  const av=(d.from||'?').replace(/\D/g,'').slice(-2)||(d.from||'?').slice(0,2).toUpperCase();
+  document.getElementById('acw-av').textContent=av;
+  document.getElementById('acw-from').textContent=d.from||'Desconocido';
+  document.getElementById('acw-meta').textContent=
+    `${d.dir||'Llamada'} · ${fmtDur(d.duration||0)} · ${(d.endTime||new Date()).toLocaleTimeString('es-CO')}`;
+  document.getElementById('acw-notes').value='';
+  document.querySelectorAll('.acw-reason').forEach(r=>r.classList.remove('sel'));
+  acwSelectedReason=''; acwSelectedOutcome='';
+  acwSeconds=60;
+  document.getElementById('acw-timer').textContent='60';
+  document.getElementById('acw-timer').classList.remove('urgent');
+  document.getElementById('acw-bar').style.width='100%';
+  document.getElementById('acw-bar').classList.remove('urgent');
+  document.getElementById('acw-overlay').classList.add('show');
+  clearInterval(acwTimerInt);
+  acwTimerInt=setInterval(()=>{
+    acwSeconds--;
+    document.getElementById('acw-timer').textContent=acwSeconds;
+    const pct=(acwSeconds/60)*100;
+    document.getElementById('acw-bar').style.width=pct+'%';
+    if(acwSeconds<=10){
+      document.getElementById('acw-timer').classList.add('urgent');
+      document.getElementById('acw-bar').classList.add('urgent');
+    }
+    if(acwSeconds<=0){ clearInterval(acwTimerInt); submitACW(); }
+  },1000);
+}
+
+function selectReason(el,val){
+  document.querySelectorAll('.acw-reasons:first-of-type .acw-reason, .acw-section:nth-child(4) .acw-reason').forEach(r=>r.classList.remove('sel'));
+  // Deseleccionar solo los de la misma sección
+  el.parentElement.querySelectorAll('.acw-reason').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel');
+  acwSelectedReason=val;
+}
+
+function selectOutcome(el,val){
+  document.getElementById('acw-outcomes').querySelectorAll('.acw-reason').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel');
+  acwSelectedOutcome=val;
+}
+
+function submitACW(){
+  clearInterval(acwTimerInt);
+  const notes=document.getElementById('acw-notes').value.trim();
+  const reason=acwSelectedReason||'Sin motivo';
+  const outcome=acwSelectedOutcome||'Sin resultado';
+
+  // Agregar ACW data a la grabación más reciente
+  if(recordings.length>0){
+    const rec=recordings[0];
+    rec.acwReason=reason;
+    rec.acwOutcome=outcome;
+    rec.acwNotes=notes;
+    rec.tag=outcome;
+    rec.timeline=[...(rec.timeline||[]),{
+      ts: new Date().toISOString(),
+      reason, outcome, notes,
+      agent: currentAgent?.name||'Agente',
+    }];
+  }
+
+  // También guardar como entrada de timeline independiente
+  saveTimelineEntry({
+    callFrom: acwCallData.from,
+    callDir: acwCallData.dir,
+    callDur: acwCallData.duration,
+    reason, outcome, notes,
+    agent: currentAgent?.name||'Agente',
+    ts: new Date().toISOString(),
+  });
+
+  document.getElementById('acw-overlay').classList.remove('show');
+  setStatus('Disponible','#4ade80');
+  document.getElementById('notes').value='';
+  document.querySelectorAll('.tag').forEach(t=>t.classList.remove('s'));
+  toast(`ACW completado — ${reason} · ${outcome}`,'var(--grn2)');
+  renderRecordings();
+}
+
+function skipACW(){
+  clearInterval(acwTimerInt);
+  document.getElementById('acw-overlay').classList.remove('show');
+  setStatus('Disponible','#4ade80');
+  document.getElementById('notes').value='';
+  document.querySelectorAll('.tag').forEach(t=>t.classList.remove('s'));
+  toast('ACW omitido','var(--t3)');
+}
+
+function saveTimelineEntry(entry){
+  try{
+    const key='nexus_timeline';
+    const existing=JSON.parse(localStorage.getItem(key)||'[]');
+    existing.unshift(entry);
+    // Guardar solo los últimos 200
+    localStorage.setItem(key, JSON.stringify(existing.slice(0,200)));
+  }catch(e){}
 }
 
 // ── Grabación ─────────────────────────────────────────────────────────────
@@ -841,7 +1065,24 @@ function renderRecordings(){
           </div>
         </div>
       </div>
-      ${r.notes?`<div style="font-size:11px;color:var(--t2);margin-top:8px;padding:7px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--b)">📝 ${r.notes}</div>`:''}
+      ${r.acwNotes||r.notes?`<div style="font-size:11px;color:var(--t2);margin-top:8px;padding:7px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--b)">📝 ${r.acwNotes||r.notes}</div>`:''}
+      ${r.timeline&&r.timeline.length?`
+      <div style="margin-top:10px">
+        <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Timeline de la llamada</div>
+        <div class="acw-timeline">
+          ${r.timeline.map(t=>{
+            const color=t.outcome==='Resuelto'?'var(--grn2)':t.outcome==='Escalado'?'var(--red2)':t.outcome==='Seguimiento requerido'?'var(--amb2)':'var(--blu2)';
+            return `<div class="tl-item">
+              <div class="tl-dot" style="background:${color}"></div>
+              <div class="tl-content">
+                <div class="tl-reason">${t.reason} · <span style="color:${color}">${t.outcome}</span></div>
+                ${t.notes?`<div class="tl-note">${t.notes}</div>`:''}
+                <div class="tl-meta">${t.agent} · ${new Date(t.ts).toLocaleString('es-CO')}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`:''}
       <div class="rec-actions">
         <button class="rec-action-btn" onclick="downloadRec(${r.id})">⬇ Descargar</button>
         <button class="rec-action-btn" onclick="deleteRec(${r.id})">🗑 Eliminar</button>
